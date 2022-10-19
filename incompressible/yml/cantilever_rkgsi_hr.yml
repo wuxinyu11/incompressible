@@ -1,0 +1,38 @@
+RegularGrid:
+    n: 2
+    γ: 5
+
+Ω:
+    type: &A1 ReproducingKernel{:Cubic2D,:□,:CubicSpline,:Tri3}
+    𝓒:
+        tag: Ω
+    𝓖:
+        type: TriRK13
+        𝝭:  [𝝭,∂𝝭∂x,∂𝝭∂y] 
+
+
+Ω̃:
+    type: *A1
+    𝓒:
+        tag: Ω
+    𝓖:
+        type: TriGI6
+        𝝭:  [𝝭,∂𝝭∂x,∂𝝭∂y] 
+     
+
+Γᵍ:
+    type: *A1
+    𝓒:
+        tag: Ω
+    𝓖:
+        tag: Γᵍ
+        type: &GB SegRK5
+        𝝭:  [𝝭,∂𝝭∂x,∂𝝭∂y,∂𝝭∂x_,∂𝝭∂y_] 
+           
+Γᵗ:
+    type: &A2 ReproducingKernel{:Cubic2D,:□,:CubicSpline,:Seg2}
+    𝓒:
+        tag: Γᵗ
+    𝓖:
+        type: *GB
+        𝝭:  [𝝭] 

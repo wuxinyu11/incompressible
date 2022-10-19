@@ -1,0 +1,28 @@
+RegularGrid:
+    n: 3
+    γ: 6
+
+Ω:
+    type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
+    𝓒:
+        tag: Ω
+    𝓖:
+        type: SegRK3
+        𝝭:  [𝝭] 
+
+Ω̃:
+    type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
+    𝓒:
+        tag: Ω
+    𝓖:
+        type: SegGI2
+        𝝭:  [∂𝝭∂x,∂𝝭∂y,∂𝝭∂z] 
+
+
+Γᵍ:
+    type:  ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Poi1}
+    𝓒:
+        tag: Γᵍ
+    𝓖:
+        type:  PoiGI1
+        𝝭:  [𝝭,∂𝝭∂x,∂𝝭∂y,∂𝝭∂z]   
