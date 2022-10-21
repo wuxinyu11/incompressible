@@ -51,13 +51,13 @@ k1 = zeros(nₚ₁,nₚ₁)
 f1 = zeros(nₚ₁)
 k2 = zeros(nₚ₂,nₚ₂)
 f2= zeros(nₚ₂)
-ops[1](elements1["Ω̃"][2],k1)
+ops[1](elements1["Ω̃"],k1)
 # ops[2](elements1["Ω"],f1)
 # ops[3](elements["Γᵗ"],f)
 # ops[4](elements1["Γᵍ"],k1,f1)
 # ops[5](elements1["Γᵍ"],k1,f1)
 
-ops[1](elements2["Ω̃"][2],k2)
+ops[1](elements2["Ω̃"],k2)
 # ops[2](elements2["Ω"],f2)
 # ops[3](elements["Γᵗ"],f)
 # ops[4](elements2["Γᵍ"],k2,f2)
@@ -67,4 +67,4 @@ ops[1](elements2["Ω̃"][2],k2)
 # d2 = k2\f2
 F=f1-f2
 K=k1-k2
-D=d1-d2
+# D=d1-d2

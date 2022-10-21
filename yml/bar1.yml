@@ -13,8 +13,8 @@ RegularGrid:
 
 Ω̃:
     type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
-    𝓒:
-        tag: Ω
+    # 𝓒:
+    #     tag: Ω
     𝓖:
         tag: Ω
         type: SegGI2
