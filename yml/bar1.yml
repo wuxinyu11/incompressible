@@ -1,6 +1,6 @@
 RegularGrid:
     n: 3
-    γ: 6
+    γ: 5
 
 Ω:
     type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
@@ -13,8 +13,8 @@ RegularGrid:
 
 Ω̃:
     type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
-    # 𝓒:
-    #     tag: Ω
+    𝓒:
+        tag: Ω
     𝓖:
         tag: Ω
         type: SegGI2
@@ -29,3 +29,11 @@ RegularGrid:
         tag: Γᵍ
         type:  PoiGI1
         𝝭:  [𝝭,∂𝝭∂x,∂𝝭∂y,∂𝝭∂z]   
+Ωᴳ:
+    type: ReproducingKernel{:Quadratic1D,:□,:CubicSpline,:Seg2}
+    𝓒:
+        tag: Ω
+    𝓖:
+        type: SegGI10
+        𝝭:  [𝝭] 
+

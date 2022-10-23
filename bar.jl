@@ -1,16 +1,28 @@
 
-using YAML, ApproxOperator
+using  YAML, ApproxOperator, XLSX, LinearAlgebra 
 
+r = 3
 ndiv2 = 12
 
 index = [12,24,48,96]
 
-for n in 1:12
+ops = [
+    Operator{:∫∇v∇udΩ}(:k=>1.0),
+    Operator{:∫vbdΩ}(),
+    Operator{:∫vtdΓ}(),
+    Operator{:∫∇𝑛vgdΓ}(:k=>1.0),
+    Operator{:∫vgdΓ}(:α=>1e3),
+    Operator{:L₂}()
+]
 
-ndiv1 = ndiv2/n
+path2 = "./msh/bar_"*string(ndiv2)*".msh"
+
+for n in 1:12
+# n = 6
+
+ndiv1 = Int(ndiv2*n/12)
 
 path1 = "./msh/bar_"*string(ndiv1)*".msh"
-path2 = "./msh/bar_"*string(ndiv2)*".msh"
 
 config2 = YAML.load_file("./yml/bar1.yml")
 elements, nodes = importmsh(path1,path2,config2)
@@ -27,19 +39,12 @@ set𝝭!(elements["Ω"])
 set∇̃𝝭!(elements["Ω̃"],elements["Ω"])
 set∇𝝭!(elements["Γᵍ"])
 
-prescribe!(elements["Ω"],:b=>(x,y,z)->-6*x)
-prescribe!(elements["Γᵍ"],:g=>(x,y,z)->x^3)
+prescribe!(elements["Ω"],:b=>(x,y,z)->-r*(r-1)*x^abs(r-2))
+prescribe!(elements["Γᵍ"],:g=>(x,y,z)->x^r)
 prescribe!([elements["Γᵍ"][1]],:n₁=>(x,y,z)->-1.0)
 prescribe!(elements["Γᵍ"][2],:n₁=>(x,y,z)->1.0)
 
-ops = [
-    Operator{:∫∇v∇udΩ}(:k=>1.0),
-    Operator{:∫vbdΩ}(),
-    Operator{:∫vtdΓ}(),
-    Operator{:∫∇𝑛vgdΓ}(:k=>1.0),
-    Operator{:∫vgdΓ}(:α=>1e3),
-    Operator{:L₂}()
-]
+
 
 k = zeros(nₚ,nₚ)
 f = zeros(nₚ)
@@ -50,23 +55,27 @@ ops[2](elements["Ω"],f)
 ops[4](elements["Γᵍ"],k,f)
 ops[5](elements["Γᵍ"],k,f)
 
- d = k\f
+l2 = 0.
+# if rank(k) < nₚ
+if det(k) ≈ 0.
+    l2 = NaN
+else
+    d = k\f
 
-push!(nodes,:d=>d)
-set𝓖!(elements["Ω"],:SegGI6,:𝝭)
-set𝝭!(elements["Ω"])
-prescribe!(elements["Ω"],:u=>(x,y,z)->x^3)
-l2 = ops[6](elements["Ω"])
-L2 = log10(l2)
+    push!(nodes,:d=>d)
+    set𝝭!(elements["Ωᴳ"])
+    prescribe!(elements["Ωᴳ"],:u=>(x,y,z)->x^r)
+    l2 = ops[6](elements["Ωᴳ"])
+end
 logs = log10(ndiv1)
 
 XLSX.openxlsx("./xlsx/bar.xlsx", mode="rw") do xf
-    row = "A"
+    row = Char(64+findfirst(n_->n_==n,1:12))
     𝐿₂ = xf[2]
-    𝐻₁ = xf[3]
-    ind = findfirst(n->n==ndiv2,index)+1
+    # 𝐻₁ = xf[3]
+    ind = findfirst(n_->n_==ndiv2,index)+1
     row = row*string(ind)
     𝐿₂[row] = log10(l2)
-    𝐻₁[row] = log10(h1)
+    # 𝐻₁[row] = log10(h1)
 end
 end
