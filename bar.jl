@@ -24,14 +24,14 @@ ndiv1 = Int(ndiv2*n/12)
 
 path1 = "./msh/bar_"*string(ndiv1)*".msh"
 
-config2 = YAML.load_file("./yml/bar1.yml")
+config2 = YAML.load_file("./yml/bar_cubic.yml")
 elements, nodes = importmsh(path1,path2,config2)
 
 nₚ = length(nodes)
 
 set_memory_𝗠!(elements["Ω̃"],:∇̃)
 
-s = 2.5/ndiv2*ones(nₚ)
+s = 3.5/ndiv2*ones(nₚ)
 
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
@@ -71,7 +71,7 @@ logs = log10(ndiv1)
 
 XLSX.openxlsx("./xlsx/bar.xlsx", mode="rw") do xf
     row = Char(64+findfirst(n_->n_==n,1:12))
-    𝐿₂ = xf[2]
+    𝐿₂ = xf[3]
     # 𝐻₁ = xf[3]
     ind = findfirst(n_->n_==ndiv2,index)+1
     row = row*string(ind)
