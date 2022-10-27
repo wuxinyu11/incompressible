@@ -1,7 +1,7 @@
 
 using  YAML, ApproxOperator, XLSX, LinearAlgebra 
 
-r = 3
+r = 2
 ndiv2 = 12
 
 index = [12,24,48,96]
@@ -17,8 +17,8 @@ ops = [
 
 path2 = "./msh/bar_"*string(ndiv2)*".msh"
 
-for n in 1:12
-# n = 6
+# for n in 1:12
+n = 12
 
 ndiv1 = Int(ndiv2*n/12)
 
@@ -69,13 +69,13 @@ else
 end
 logs = log10(ndiv1)
 
-XLSX.openxlsx("./xlsx/bar.xlsx", mode="rw") do xf
-    row = Char(64+findfirst(n_->n_==n,1:12))
-    𝐿₂ = xf[3]
-    # 𝐻₁ = xf[3]
-    ind = findfirst(n_->n_==ndiv2,index)+1
-    row = row*string(ind)
-    𝐿₂[row] = log10(l2)
-    # 𝐻₁[row] = log10(h1)
-end
-end
+# XLSX.openxlsx("./xlsx/bar.xlsx", mode="rw") do xf
+#     row = Char(64+findfirst(n_->n_==n,1:12))
+#     𝐿₂ = xf[3]
+#     # 𝐻₁ = xf[3]
+#     ind = findfirst(n_->n_==ndiv2,index)+1
+#     row = row*string(ind)
+#     𝐿₂[row] = log10(l2)
+#     # 𝐻₁[row] = log10(h1)
+# end
+# end
