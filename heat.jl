@@ -1,10 +1,10 @@
 
 using  YAML, ApproxOperator, XLSX, LinearAlgebra 
 
-r = 3
+r = 4
 
-ndiv2 = 12
-# index = [12,24,48,96]
+ndiv2 = 96
+index = [12,24,48,96]
 
 ops = [
     Operator{:∫∇v∇udΩ}(:k=>1.0),
@@ -14,11 +14,12 @@ ops = [
     Operator{:∫∇̄𝑛vgdΓ}(:k=>1.0),
     Operator{:H₁}()
 ]
- 
-# for n in 60:96
-# ndiv1 = Int(ndiv2*n/96)
 
-   ndiv1 = 12
+ 
+for n in 22:96
+ndiv1 = Int(ndiv2*n/96)
+# n =24
+#    ndiv1 = 24
 
 path1 = "./msh/heat_"*string(ndiv1)*".msh"
 path2 = "./msh/heat_"*string(ndiv2)*".msh"
@@ -92,13 +93,15 @@ L2=log10(l2)
 # f = check∇𝝭(elements["Ω"])
 # f = check∇𝝭(elements["Ω̃"])
 # f = check∇𝝭(elements["Γᵍ"])
-# XLSX.openxlsx("./xlsx/heat.xlsx", mode="rw") do xf
-#     row = Char(64+findfirst(n_->n_==n,60:96))
-#     𝐿₂ = xf[2]
-#     𝐻₁ = xf[3]
-#     ind = findfirst(n_->n_==ndiv2,index)+1
-#     row = row*string(ind)
-#     𝐿₂[row] = log10(l2)
-#     𝐻₁[row] = log10(h1)
-# end
-# end
+XLSX.openxlsx("./xlsx/heat.xlsx", mode="rw") do xf
+    # row = Char(64+findfirst(n_->n_==n,1:ndiv2))
+    row = Char(64+findfirst(n_->n_==ndiv2,index))
+    𝐿₂ = xf[2]
+    𝐻₁ = xf[3]
+    # ind = findfirst(n_->n_==ndiv2,index)+1
+    ind = findfirst(n_->n_==n,1:ndiv2)
+    row = row*string(ind)
+    𝐿₂[row] = log10(l2)
+    𝐻₁[row] = log10(h1)
+end
+end
