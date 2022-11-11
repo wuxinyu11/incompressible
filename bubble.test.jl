@@ -14,19 +14,22 @@ ops = [
 ]
 
  
-ndiv1 = 72
+# ndiv1 = 4
 
 # path1 = "./msh/heat_"*string(ndiv1)*".msh"
- path1 = "./msh/square_bubble_"*string(ndiv1)*".msh"
+ path1 = "./msh/square_bubble_78-3.msh"
+
 path2 = "./msh/heat_"*string(ndiv2)*".msh"
 
 config = YAML.load_file("./yml/heat_quadratic.yml")
+# config = YAML.load_file("./yml/heat_cubic.yml")
+
 elements, nodes = importmsh(path1,path2,config)
 
 set_memory_𝗠!(elements["Ω̃"],:∇̃)
 set_memory_𝗠!(elements["Γᵍ"],:𝝭,:∇̃)
 nₚ = length(nodes)
-s = 2.5/ndiv2*ones(nₚ)
+s = 3.5/ndiv2*ones(nₚ)
 
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
