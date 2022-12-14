@@ -15,7 +15,7 @@ op_Γ = Operator{:∫vgdΓ}(:α=>1e8)
 
 k = zeros(nₚ,nₚ)
 f = zeros(nₚ)
-op_Ω(elements["Ω"][1:2],k)
+op_Ω(elements["Ω"][1:1],k)
 # op_Γ(elements["Γ"],k,f)
 
 rk = rank(k)

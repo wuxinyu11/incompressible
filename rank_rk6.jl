@@ -5,8 +5,10 @@ elements, nodes = importmsh("./msh/square_rk6_1.msh",config)
 
 nᵢ = ApproxOperator.getnᵢ(elements["Ω"])
 k = zeros(nᵢ,nᵢ)
-gᵢ = zeros(6,3)
-gⱼ = zeros(6,3)
+g₁ᵢ = zeros(6,3)
+g₂ᵢ = zeros(6,3)
+g₁ⱼ = zeros(6,3)
+g₂ⱼ = zeros(6,3)
 G⁻¹ = [9. -12. -12.;-12. 24. 12.;-12. 12. 24.]
 get𝒒(ξ,η) = (1.0,ξ,η)
 get∂𝒒∂ξ(ξ,η) = (0.0,1.0,0.0)
@@ -38,7 +40,8 @@ for elm in elements["Ω"][1:2]
         for (k,qₖ) in enumerate(q)
             ∂qₖ∂ξ = ∂q∂ξ[k]
             ∂qₖ∂η = ∂q∂η[k]
-            gᵢ[i,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂x+∂qₖ∂η*∂η∂x)+wb*qₖ*(D₁+D₂)
+            g₁ᵢ[i,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂x+∂qₖ∂η*∂η∂x)+wb*qₖ*D₁
+            g₂ᵢ[i,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂y+∂qₖ∂η*∂η∂y)+wb*qₖ*D₂
         end
     end
     for (j,ξⱼ) in enumerate(𝓖)
@@ -55,7 +58,8 @@ for elm in elements["Ω"][1:2]
         for (k,qₖ) in enumerate(q)
             ∂qₖ∂ξ = ∂q∂ξ[k]
             ∂qₖ∂η = ∂q∂η[k]
-            gⱼ[j,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂x+∂qₖ∂η*∂η∂x)+wb*qₖ*(D₁+D₂)
+            g₁ⱼ[j,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂x+∂qₖ∂η*∂η∂x)+wb*qₖ*D₁
+            g₂ⱼ[j,k] = wi/2.0*(∂qₖ∂ξ*∂ξ∂y+∂qₖ∂η*∂η∂y)+wb*qₖ*D₂
         end
     end
     for (i,ξᵢ) in enumerate(𝓖)
@@ -64,7 +68,8 @@ for elm in elements["Ω"][1:2]
             J = ξⱼ.𝐺
             for ii in 1:3
                 for jj in 1:3
-                    k[I,J] += gᵢ[i,ii]*G⁻¹[ii,jj]*gⱼ[j,jj]
+                    k[I,J] += g₁ᵢ[i,ii]*G⁻¹[ii,jj]*g₁ⱼ[j,jj]/𝐴 + g₂ᵢ[i,ii]*G⁻¹[ii,jj]*g₂ⱼ[j,jj]/𝐴
+                    # k[I,J] += g₁ᵢ[i,ii]*G⁻¹[ii,jj]*g₁ⱼ[j,jj]/𝐴
                 end
             end
         end
