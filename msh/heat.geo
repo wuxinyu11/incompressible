@@ -1,6 +1,6 @@
 a = 1.0;
 b = 1.0;
-n = 7;
+n = 1;
 
 Point(1) = {0.0, 0.0, 0.0};
 Point(2) = {  a, 0.0, 0.0};
@@ -15,14 +15,15 @@ Line(4) = {4,1};
 Curve Loop(5) = {1,2,3,4};
 
 Plane Surface(1) = {5};
-//Transfinite Curve{1,2,3,4} = n+1;
-Transfinite Curve{1,3} = n;
-Transfinite Curve{2,4} = n+1;
+Transfinite Curve{1,2,3,4} = n+1;
+//Transfinite Curve{1,3} = n;
+//Transfinite Curve{2,4} = n+1;
 Transfinite Surface{1};
 
 Physical Curve("Γᵍ") = {1,2,3,4};
 Physical Surface("Ω") = {1};
 
+//Mesh.ElementOrder = 2;
 Mesh.Algorithm = 1;
 Mesh.MshFileVersion = 2;
 Mesh 2;

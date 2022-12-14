@@ -47,7 +47,7 @@ prescribe!(elements["Γᵍ"],:g=>(x,y,z)->(x+y)^r)
 k = zeros(nₚ,nₚ)
 f = zeros(nₚ)
 
-ops[1](elements["Ω̃"],k)
+ops[1](elements["Ω̃"][1:3],k)
 ops[2](elements["Ω"],f)
 ops[4](elements["Γᵍ"],k,f)
 ops[5](elements["Γᵍ"],k,f)
