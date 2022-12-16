@@ -3,7 +3,20 @@ using Revise, ApproxOperator, TOML, LinearAlgebra
 config = TOML.parsefile("./toml/rk6.toml")
 elements, nodes = importmsh("./msh/square_rk6_1.msh",config)
 
-nᵢ = ApproxOperator.getnᵢ(elements["Ω"])
+dgt = 10
+dofs = Tuple{Float64,Float64}[]
+for elm in elements["Ω"]
+    𝓖 = elm.𝓖
+    for ξ in 𝓖
+        x = trunc(ξ.x; digits=dgt)
+        y = trunc(ξ.y; digits=dgt)
+        push!(dofs,(x,y))
+    end
+end
+unique!(dofs)
+
+
+nᵢ = length(dofs)
 k = zeros(nᵢ,nᵢ)
 g₁ᵢ = zeros(6,3)
 g₂ᵢ = zeros(6,3)
@@ -13,6 +26,7 @@ G⁻¹ = [9. -12. -12.;-12. 24. 12.;-12. 12. 24.]
 get𝒒(ξ,η) = (1.0,ξ,η)
 get∂𝒒∂ξ(ξ,η) = (0.0,1.0,0.0)
 get∂𝒒∂η(ξ,η) = (0.0,0.0,1.0)
+
 for elm in elements["Ω"][1:2]
     𝓖 = elm.𝓖
     𝐴 = ApproxOperator.get𝐴(elm)
@@ -27,7 +41,6 @@ for elm in elements["Ω"][1:2]
     ∂η∂x = y₁-y₃
     ∂η∂y = x₃-x₁
     for (i,ξᵢ) in enumerate(𝓖)
-        I = ξᵢ.𝐺
         ξ = ξᵢ.ξ
         η = ξᵢ.η
         q = get𝒒(ξ,η)
@@ -45,7 +58,6 @@ for elm in elements["Ω"][1:2]
         end
     end
     for (j,ξⱼ) in enumerate(𝓖)
-        J = ξⱼ.𝐺
         ξ = ξⱼ.ξ
         η = ξⱼ.η
         q = get𝒒(ξ,η)
@@ -63,9 +75,13 @@ for elm in elements["Ω"][1:2]
         end
     end
     for (i,ξᵢ) in enumerate(𝓖)
-        I = ξᵢ.𝐺
+        x = trunc(ξᵢ.x; digits=dgt)
+        y = trunc(ξᵢ.y; digits=dgt)
+        I = findfirst(x_->x_==(x,y),dofs)
         for (j,ξⱼ) in enumerate(𝓖)
-            J = ξⱼ.𝐺
+            x = trunc(ξⱼ.x; digits=dgt)
+            y = trunc(ξⱼ.y; digits=dgt)
+            J = findfirst(x_->x_==(x,y),dofs)
             for ii in 1:3
                 for jj in 1:3
                     k[I,J] += g₁ᵢ[i,ii]*G⁻¹[ii,jj]*g₁ⱼ[j,jj]/𝐴 + g₂ᵢ[i,ii]*G⁻¹[ii,jj]*g₂ⱼ[j,jj]/𝐴

@@ -1,0 +1,9 @@
+["Ω"]
+type="Element{:Tri3}"
+"𝓒".tag="Ω"
+["Γᵗ"]
+type="Element{:Seg2}"
+"𝓒".tag="Γᵗ"
+["Γᵍ"]
+type="Element{:Seg2}"
+"𝓒".tag="Γᵍ"
