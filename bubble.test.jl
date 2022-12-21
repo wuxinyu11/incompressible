@@ -17,12 +17,12 @@ ops = [
 # ndiv1 = 4
 
 # path1 = "./msh/heat_"*string(ndiv1)*".msh"
- path1 = "./msh/square_bubble_78-3.msh"
+ path1 = "./msh/square_bubble_25.msh"
 
 path2 = "./msh/heat_"*string(ndiv2)*".msh"
 
-config = YAML.load_file("./yml/heat_quadratic.yml")
-# config = YAML.load_file("./yml/heat_cubic.yml")
+# config = YAML.load_file("./yml/heat_quadratic.yml")
+config = YAML.load_file("./yml/heat_cubic.yml")
 
 elements, nodes = importmsh(path1,path2,config)
 
@@ -61,3 +61,4 @@ prescribe!(elements["Ωᴳ"],:∂u∂x=>(x,y,z)->r*(x+y)^abs(r-1))
 prescribe!(elements["Ωᴳ"],:∂u∂y=>(x,y,z)->r*(x+y)^abs(r-1))
 h1,l2 = ops[6](elements["Ωᴳ"])
 # L2=log10(l2)
+# rank(k)

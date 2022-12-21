@@ -6,7 +6,7 @@ RegularGrid:
     type: ReproducingKernel{:Quadratic2D,:□,:CubicSpline,:Tri3}
     𝓖:
         tag: Ω
-        type: TriRK13
+        type: TriRK6
         𝝭: [𝝭,∂𝝭∂x,∂𝝭∂y,∂𝝭∂z] 
 
 Ω̃:
@@ -25,7 +25,7 @@ RegularGrid:
         tag: Ω
     𝓖:
         tag: Γᵍ
-        type: SegRK5
+        type: SegRK3
         𝝭: [𝝭,∂𝝭∂x,∂𝝭∂y,∂𝝭∂z,∂𝝭∂x_,∂𝝭∂y_,∂𝝭∂z_]   
 
 Ωᴳ:
