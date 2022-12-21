@@ -1,0 +1,9 @@
+[RegularGrid]
+n = 2
+"γ" = 5
+
+["Ω"]
+type="ReproducingKernel{:Cubic2D,:□,:CubicSpline,:Tri3}"
+"𝓒".tag="Ω"
+"𝓖".type="TriGI16"
+"𝓖"."𝝭"="∇₂𝝭"
