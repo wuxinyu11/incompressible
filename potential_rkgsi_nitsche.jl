@@ -1,7 +1,7 @@
-using Revise,ApproxOperator,TOML
+using Revise,ApproxOperator,TOML,LinearAlgebra 
 
 file_nodes = "./msh/square_node_12.msh"
-file_elements = "./msh/square_bubble_24.msh"
+file_elements = "./msh/square_bubble-26-169.msh"
 config = TOML.parsefile("./toml/potential_2D_rkgsi_nitsche_cubic.toml")
 
 elements,nodes = importmsh(file_elements,file_nodes,config)
@@ -17,7 +17,7 @@ set𝝭!(elements["Γᵗ"])
 set∇₂𝝭!(elements["Γᵍ"])
 
 # prescribing
-r = 1
+r = 3
 u(x,y,z) = (x+y)^r
 ∂u∂x(x,y,z) = r*(x+y)^abs(r-1)
 ∂u∂y(x,y,z) = r*(x+y)^abs(r-1)
