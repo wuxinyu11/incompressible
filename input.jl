@@ -343,7 +343,7 @@ function import_rkgsi_mix(filename1::String,filename2::String)
     elements = Dict([
         "Ω"=>ReproducingKernel{parameters...,:Tri3}[],
         "Ω̃"=>RKGradientSmoothing{parameters...,:Tri3}[],
-        "Ω̄"=>RKGradientSmoothing{parameters...,:Tri3}[],
+        "Ω̄"=>GRKGradientSmoothing{parameters...,:Tri3}[],
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[]
     ])
@@ -364,6 +364,9 @@ function import_rkgsi_mix(filename1::String,filename2::String)
     ns_Ω̄ = 0
     nₑ = length(elms["Ω"])
 
+    𝗚 = zeros(nₚ_𝑝,nₚ_𝑝)
+    𝗴₁ = zeros(nₚ_𝑝,nₚ)
+    𝗴₂ = zeros(nₚ_𝑝,nₚ)
     for (C,a) in enumerate(elms["Ω"])
         indices = Set{Int}()
         indices_𝑝 = Set{Int}()
@@ -384,7 +387,7 @@ function import_rkgsi_mix(filename1::String,filename2::String)
         end
         element_Ω = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g_Ω,ng_Ω,𝓖_Ω))
         element_Ω̃ = RKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(g_Ω̃,ng_Ω̃,𝓖_Ω̃),(g_Ω,ng_Ω,𝓖_Ω))
-        element_Ω̄ = ReproducingKernel{parameters...,:Tri3}((c_Ω̄,nc_Ω̄,𝓒_Ω̄),(g_Ω,ng_Ω,𝓖_Ω̄))
+        element_Ω̄ = GRKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(c_Ω̄,nc_Ω̄,𝓒_Ω̄),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖_Ω̂),𝗚,𝗴₁,𝗴₂)
         push!(elements["Ω"],element_Ω)
         push!(elements["Ω̃"],element_Ω̃)
         push!(elements["Ω̄"],element_Ω̄)
@@ -395,7 +398,8 @@ function import_rkgsi_mix(filename1::String,filename2::String)
         g_Ω̃ += ng_Ω̃
         ns_Ω += nc*ng_Ω
         ns_Ω̃ += nc*ng_Ω̃
-        ns_Ω̄ += nc_Ω̄*ng_Ω
+        ns_Ω̄ += nc_Ω̄*ng_Ω̃
+        ns_Ω̂ += nc_Ω̄*ng_Ω
     end
 
     D₁ = zeros(g_Ω)
@@ -404,6 +408,17 @@ function import_rkgsi_mix(filename1::String,filename2::String)
     y = zeros(g_Ω)
     z = zeros(g_Ω)
     𝑤 = zeros(g_Ω)
+    x̃ = zeros(g_Ω̃)
+    ỹ = zeros(g_Ω̃)
+    z̃ = zeros(g_Ω̃)
+    𝑤̃ = zeros(g_Ω̃)
+    𝐴 = zeros(nₑ)
+    D₁₁ = zeros(nₑ)
+    D₁₂ = zeros(nₑ)
+    D₂₁ = zeros(nₑ)
+    D₂₂ = zeros(nₑ)
+    D₃₁ = zeros(nₑ)
+    D₃₂ = zeros(nₑ)
     data_𝓖_Ω = Dict([
         :ξ=>(1,scheme_Ω[:ξ]),
         :η=>(1,scheme_Ω[:η]),
@@ -422,22 +437,42 @@ function import_rkgsi_mix(filename1::String,filename2::String)
         :ξ=>(1,scheme_Ω̃[:ξ]),
         :η=>(1,scheme_Ω̃[:η]),
         :w=>(1,scheme_Ω̃[:w]),
-        :x=>(2,zeros(g_Ω̃)),
-        :y=>(2,zeros(g_Ω̃)),
-        :z=>(2,zeros(g_Ω̃)),
-        :𝑤=>(2,zeros(g_Ω̃)),
-        :𝐴=>(3,zeros(nₑ)),
-        :D₁₁=>(3,zeros(nₑ)),
-        :D₁₂=>(3,zeros(nₑ)),
-        :D₂₁=>(3,zeros(nₑ)),
-        :D₂₂=>(3,zeros(nₑ)),
-        :D₃₁=>(3,zeros(nₑ)),
-        :D₃₂=>(3,zeros(nₑ)),
+        :x=>(2,x̃),
+        :y=>(2,ỹ),
+        :z=>(2,z̃),
+        :𝑤=>(2,𝑤̃),
+        :𝐴=>(3,𝐴),
+        :D₁₁=>(3,D₁₁),
+        :D₁₂=>(3,D₁₂),
+        :D₂₁=>(3,D₂₁),
+        :D₂₂=>(3,D₂₂),
+        :D₃₁=>(3,D₃₁),
+        :D₃₂=>(3,D₃₂),
         :∂𝝭∂x=>(4,zeros(ns_Ω̃)),
         :∂𝝭∂y=>(4,zeros(ns_Ω̃)),
         :∇̃=>(0,zeros(n𝒑̃)),
     ])
     data_𝓖_Ω̄ = Dict([
+        :ξ=>(1,scheme_Ω̃[:ξ]),
+        :η=>(1,scheme_Ω̃[:η]),
+        :w=>(1,scheme_Ω̃[:w]),
+        :x=>(2,x̃),
+        :y=>(2,ỹ),
+        :z=>(2,z̃),
+        :𝑤=>(2,𝑤̃),
+        :𝐴=>(3,𝐴),
+        :D₁₁=>(3,D₁₁),
+        :D₁₂=>(3,D₁₂),
+        :D₂₁=>(3,D₂₁),
+        :D₂₂=>(3,D₂₂),
+        :D₃₁=>(3,D₃₁),
+        :D₃₂=>(3,D₃₂),
+        :𝝭=>(4,zeros(ns_Ω̄)),
+        :∂𝝭∂x=>(4,zeros(ns_Ω̄)),
+        :∂𝝭∂y=>(4,zeros(ns_Ω̄)),
+        :∇̃=>(0,zeros(n𝒑̃)),
+    ])
+    data_𝓖_Ω̂ = Dict([
         :ξ=>(1,scheme_Ω[:ξ]),
         :η=>(1,scheme_Ω[:η]),
         :w=>(1,scheme_Ω[:w]),
@@ -448,12 +483,15 @@ function import_rkgsi_mix(filename1::String,filename2::String)
         :y=>(2,y),
         :z=>(2,z),
         :𝑤=>(2,𝑤),
-        :𝝭=>(4,zeros(ns_Ω̄)),
+        :𝝭=>(4,zeros(ns_Ω̂)),
+        :∂𝝭∂x=>(4,zeros(ns_Ω̂)),
+        :∂𝝭∂y=>(4,zeros(ns_Ω̂)),
         :𝗠=>(0,zeros(n𝒑)),
     ])
     
     G_Ω = 0
     s_Ω = 0
+    s_Ω̂ = 0
     s_Ω̄ = 0
     G_Ω̃ = 0
     s_Ω̃ = 0
@@ -474,7 +512,7 @@ function import_rkgsi_mix(filename1::String,filename2::String)
         for i in 1:ng_Ω
             G_Ω += 1
             x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω,C,s_Ω),data_𝓖_Ω)
-            x_𝑝 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω,C,s_Ω̄),data_𝓖_Ω̄)
+            x_𝑝 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω,C,s_Ω̂),data_𝓖_Ω̂)
             ξ = x.ξ
             η = x.η
             D₁ = 0.0
@@ -492,11 +530,12 @@ function import_rkgsi_mix(filename1::String,filename2::String)
             push!(𝓖_Ω,x)
             push!(𝓖_Ω̄,x_𝑝)
             s_Ω += getfield(elements["Ω"][C],:𝓒)[2]
-            s_Ω̄ += getfield(elements["Ω̄"][C],:𝓒)[2]
+            s_Ω̂ += getfield(elements["Ω̄"][C],:𝓒ᵖ)[2]
         end
         for i in 1:ng_Ω̃
             G_Ω̃ += 1
             x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̃)
+            x_𝑝 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̄),data_𝓖_Ω̄)
             ξ = x.ξ
             η = x.η
                 
@@ -506,7 +545,9 @@ function import_rkgsi_mix(filename1::String,filename2::String)
             x.z = z_
             x.𝑤 = 𝐴*x.w
             push!(𝓖_Ω̃,x)
+            push!(𝓖_Ω̄,x_𝑝)
             s_Ω̃ += getfield(elements["Ω"][C],:𝓒)[2]
+            s_Ω̄ += getfield(elements["Ω̄"][C],:𝓒ᵖ)[2]
         end
         elements["Ω̃"][C].𝐴 = 𝐴
         elements["Ω̃"][C].D₁₁ = D₁₁
