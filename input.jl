@@ -342,26 +342,29 @@ function import_rkgsi_mix(filename1::String,filename2::String)
 
     elements = Dict([
         "Ω"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᵖ"=>ReproducingKernel{parameters...,:Tri3}[],
         "Ω̃"=>RKGradientSmoothing{parameters...,:Tri3}[],
-        "Ω̄"=>GRKGradientSmoothing{parameters...,:Tri3}[],
+        "Ω̃ᵖ"=>GRKGradientSmoothing{parameters...,:Tri3}[],
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[]
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
-    𝓒_Ω̄ = Node{(:𝐼,),1}[]
+    𝓒ᵖ = Node{(:𝐼,),1}[]
     𝓖_Ω = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
     𝓖_Ω̃ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
-    𝓖_Ω̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ωᵖ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ω̃ᵖ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
     c = 0
-    c_Ω̄ = 0
+    cᵖ = 0
     g_Ω = 0
     g_Ω̃ = 0
     ng_Ω = 6
     ng_Ω̃ = 3
     ns_Ω = 0
     ns_Ω̃ = 0
-    ns_Ω̄ = 0
+    ns_Ωᵖ = 0
+    ns_Ω̃ᵖ = 0
     nₑ = length(elms["Ω"])
 
     𝗚 = zeros(nₚ_𝑝,nₚ_𝑝)
@@ -528,7 +531,7 @@ function import_rkgsi_mix(filename1::String,filename2::String)
             x.D₁ = D₁
             x.D₂ = D₂
             push!(𝓖_Ω,x)
-            push!(𝓖_Ω̄,x_𝑝)
+            push!(𝓖_Ω̂,x_𝑝)
             s_Ω += getfield(elements["Ω"][C],:𝓒)[2]
             s_Ω̂ += getfield(elements["Ω̄"][C],:𝓒ᵖ)[2]
         end
