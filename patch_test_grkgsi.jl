@@ -72,46 +72,46 @@ end
 #     end
 # end
 
-E = 3E6;ν = 0.3;P = 1000;L = 48;D = 12;
-I = D^3/12
-EI = E*I
+# E = 3E6;ν = 0.3;P = 1000;L = 48;D = 12;
+# I = D^3/12
+# EI = E*I
 
-prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.)
-prescribe!(elements["Γᵗ"],:t₂=>(x,y,z)->P/2/I*(D^2/4-y^2))
-prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
-prescribe!(elements["Γᵍ"],:g₂=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
-prescribe!(elements["Γᵍ"],:n₁₁=>(x,y,z)->1.0)
-prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
-prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
+# prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.)
+# prescribe!(elements["Γᵗ"],:t₂=>(x,y,z)->P/2/I*(D^2/4-y^2))
+# prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
+# prescribe!(elements["Γᵍ"],:g₂=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
+# prescribe!(elements["Γᵍ"],:n₁₁=>(x,y,z)->1.0)
+# prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
+# prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
-coefficient = (:E=>E,:ν=>ν,:α=>1E3*E)
-ops = [
-    Operator{:∫∫εᵢⱼσᵢⱼdxdy}(coefficient...),
-    Operator{:∫vᵢtᵢds}(coefficient...),
-    Operator{:∫σᵢⱼnⱼgᵢds}(coefficient...),
-    Operator{:∫vᵢgᵢds}(coefficient...),
-    Operator{:Hₑ_PlaneStress}(coefficient...)
-]
+# coefficient = (:E=>E,:ν=>ν,:α=>1E3*E)
+# ops = [
+#     Operator{:∫∫εᵢⱼσᵢⱼdxdy}(coefficient...),
+#     Operator{:∫vᵢtᵢds}(coefficient...),
+#     Operator{:∫σᵢⱼnⱼgᵢds}(coefficient...),
+#     Operator{:∫vᵢgᵢds}(coefficient...),
+#     Operator{:Hₑ_PlaneStress}(coefficient...)
+# ]
 
-k = zeros(2*nₚ,2*nₚ)
-f = zeros(2*nₚ)
+# k = zeros(2*nₚ,2*nₚ)
+# f = zeros(2*nₚ)
 
-ops[1](elements["Ω̃"],k)
-# ops[1](elements["Ω̄"],k)
-ops[2](elements["Γᵗ"],f)
-ops[3](elements["Γᵍ"],k,f)
-ops[4](elements["Γᵍ"],k,f) 
+# ops[1](elements["Ω̃"],k)
+# # ops[1](elements["Ω̄"],k)
+# ops[2](elements["Γᵗ"],f)
+# ops[3](elements["Γᵍ"],k,f)
+# ops[4](elements["Γᵍ"],k,f) 
 
-d = k\f
-d₁ = d[1:2:2*nₚ]
-d₂ = d[2:2:2*nₚ]
-push!(nodes,:d₁=>d₁,:d₂=>d₂)
+# d = k\f
+# d₁ = d[1:2:2*nₚ]
+# d₂ = d[2:2:2*nₚ]
+# push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-set∇𝝭!(elements["Ωₑ"])
-prescribe!(elements["Ωₑ"],:u=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
-prescribe!(elements["Ωₑ"],:v=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
-prescribe!(elements["Ωₑ"],:∂u∂x=>(x,y,z)->-P/EI*(L-x)*y)
-prescribe!(elements["Ωₑ"],:∂u∂y=>(x,y,z)->-P/6/EI*((6*L-3*x)*x + (2+ν)*(3*y^2-D^2/4)))
-prescribe!(elements["Ωₑ"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
-prescribe!(elements["Ωₑ"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
-h1,l2 = ops[5](elements["Ωₑ"])
+# set∇𝝭!(elements["Ωₑ"])
+# prescribe!(elements["Ωₑ"],:u=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
+# prescribe!(elements["Ωₑ"],:v=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
+# prescribe!(elements["Ωₑ"],:∂u∂x=>(x,y,z)->-P/EI*(L-x)*y)
+# prescribe!(elements["Ωₑ"],:∂u∂y=>(x,y,z)->-P/6/EI*((6*L-3*x)*x + (2+ν)*(3*y^2-D^2/4)))
+# prescribe!(elements["Ωₑ"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
+# prescribe!(elements["Ωₑ"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
+# h1,l2 = ops[5](elements["Ωₑ"])

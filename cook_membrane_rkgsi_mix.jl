@@ -1,7 +1,7 @@
 
 using Revise, ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
-elements, nodes = import_gauss_quadratic("./msh/cook_membrance_10.msh",:TriGI3)
+elements, nodes = import_rkgsi_mix_quadratic("./msh/cook_membrance_10.msh")
 
 κ = 400942
 μ = 80.1938
