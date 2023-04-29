@@ -1,7 +1,10 @@
 
 using Revise, ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
-elements, nodes = import_rkgsi_mix_quadratic("./msh/cook_membrance_10.msh")
+
+fid_𝑢 = "./msh/cook_membrance_10.msh"
+fid_𝑝 = "./msh/cook_membrance_5.msh"
+elements, nodes, nodes_𝑝 = import_rkgsi_mix_quadratic(fid_𝑢,fid_𝑝)
 
 κ = 400942
 μ = 80.1938
@@ -9,14 +12,21 @@ E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
 
 nₚ = length(nodes)
+n𝑝 = length(nodes_𝑝)
 nₑ = length(elements["Ω"])
 s = 2.5*44/10*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
+s = 2.5*44/5*ones(nₚ)
+push!(nodes_𝑝,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set𝝭!(elements["Ω"])
-set∇𝝭!(elements["Ω"])
+set∇𝝭!(elements["Ω̃"])
+set𝝭!(elements["Ωˢᵖ"])
+set𝝭!(elements["Ωᵖ"])
+set𝝭!(elements["Ω̃ᵖ"])
+set∇𝝭!(elements["Ω̄"])
 set𝝭!(elements["Γᵗ"])
-set𝝭!(elements["Γᵍ"])
+set∇𝝭!(elements["Γᵍ"])
 
 prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->0.0)
@@ -33,10 +43,14 @@ ops = [
 ]
 
 k = zeros(2*nₚ,2*nₚ)
+kᵛ = zeros(2*nₚ,2*nₚ)
+kᵈ = zeros(2*nₚ,2*nₚ)
 kα = zeros(2*nₚ,2*nₚ)
 f = zeros(2*nₚ)
 fα = zeros(2*nₚ)
 fint = zeros(2*nₚ)
+fintᵛ = zeros(2*nₚ)
+fintᵈ = zeros(2*nₚ)
 fext = zeros(2*nₚ)
 d = zeros(2*nₚ)
 Δd= zeros(2*nₚ)
@@ -69,15 +83,26 @@ for (n,p) in enumerate(P)
     iter = 0
     while err_Δd>tolerance && iter<maxiters
         iter += 1
-        fill!(fint,0.0)
-        ops[2](elements["Ω"],fint)
-        f .= fext-fint
-
-        fill!(k,0.0)
         fill!(kα,0.0)
         fill!(fα,0.0)
-        ops[1](elements["Ω"],k)
         ops[4](elements["Γᵍ"],kα,fα)
+
+        fill!(k,0.0)
+        fill!(fint,0.0)
+        ops[1](elements["Ω̃"],k)
+        ops[2](elements["Ω̃"],fint)
+
+        fill!(kᵛ,0.0)
+        fill!(fintᵛ,0.0)
+        opsᵛ[1](elements["Ω̄"],kᵛ)
+        opsᵛ[2](elements["Ω̄"],fintᵛ)
+        # opsᵛ[1](elements["Ω"],kᵛ)
+        # opsᵛ[2](elements["Ω"],fintᵛ)
+
+        fill!(kᵈ,0.0)
+        fill!(fintᵈ,0.0)
+        opsᵈ[1](elements["Ω̃"],kᵈ)
+        opsᵈ[2](elements["Ω̃"],fintᵈ)
 
         # if iter == 1
         #     Δd .= k⁻¹*(f+fα)
@@ -85,7 +110,11 @@ for (n,p) in enumerate(P)
         #     Δd .= k⁻¹*f
         # end
 
-        Δd .= (k+kα)\(f+fα)
+        # f .= fext-fint
+        # Δd .= (k+kα)\(f+fα)
+
+        f .= fext-fintᵛ-fintᵈ
+        Δd .= (kᵛ+kᵈ+kα)\(f+fα)
 
         # fnorm = norm(f)
         # fᵗnorm = fnorm+1.0

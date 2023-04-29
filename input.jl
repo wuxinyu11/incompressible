@@ -754,7 +754,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         node.z = p.z
         push!(nodes,node)
     end
-    nₚ_𝑝 = length(nds)
+    nₚ_𝑝 = length(pis)
     nodes_𝑝 = Node{(:𝐼,),1}[]
     x_𝑝 = zeros(nₚ_𝑝)
     y_𝑝 = zeros(nₚ_𝑝)
@@ -839,7 +839,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         element_Ωᵖ = RKGradientSmoothing{parameters...,:Tri3}((cᵖ,ncᵖ,𝓒ᵖ),(g_Ω,ng_Ω,𝓖_Ωᵖ),(g_Ω,ng_Ω,𝓖_Ωˢᵖ))
         element_Ω̃ = RKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(g_Ω̃,ng_Ω̃,𝓖_Ω̃),(g_Ω,ng_Ω,𝓖_Ω))
         element_Ω̃ᵖ = RKGradientSmoothing{parameters...,:Tri3}((cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ωˢᵖ))
-        element_Ω̄ = GRKGradientSmoothing{parameters...,:Tri3}((0,nₚ,nodes),(c,nc,𝓒),(cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖_Ωᵖ),𝗚,𝗴₁,𝗴₂)
+        element_Ω̄ = GRKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖_Ωᵖ),𝗚,𝗴₁,𝗴₂)
         element_Ωₑ = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g_Ωₑ,ng_Ωₑ,𝓖_Ωₑ))
         push!(elements["Ω"],element_Ω)
         push!(elements["Ωˢᵖ"],element_Ωˢᵖ)

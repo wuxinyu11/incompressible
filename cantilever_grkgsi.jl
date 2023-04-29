@@ -24,7 +24,7 @@ set∇𝝭!(elements["Γᵍ"])
 
 # temp = 0.0
 # 𝗚 = elements["Ω̄"][1].𝗚
-# 𝗴₁ = elements["Ω̄"][1].𝗴₁
+𝗴₁ = elements["Ω̄"][1].𝗴₁
 # 𝗴₂ = elements["Ω̄"][1].𝗴₂
 # for (i,pᵢ) in enumerate(nodes_𝑝)
 #     # for (j,pⱼ) in enumerate(nodes_𝑝)
@@ -38,25 +38,25 @@ set∇𝝭!(elements["Γᵍ"])
 # for a in elements["Ωˢᵖ"][[1]]
 # for a in elements["Ωᵖ"]
 # for a in elements["Ω̃ᵖ"]
-for a in elements["Ω̄"]
-    for ξ in a.𝓖
-        # 𝝭 = ξ[:𝝭]
-        ∂𝝭∂x = ξ[:∂𝝭∂x]
-        ∂𝝭∂y = ξ[:∂𝝭∂y]
-        u = 0.0
-        for (i,x) in enumerate(a.𝓒)
-            # u += 𝝭[i]*x.y
-            u += ∂𝝭∂x[i]
-        end
-        # if abs(u - ξ.y) > 1e-13
-        if abs(u - 0.0) > 1e-13
-        # if abs(u) > 1e-13
-            println(u)
-            println(1.0)
-            error("consistency condition is not satisfied")
-        end
-    end
-end
+# for a in elements["Ω̄"]
+#     for ξ in a.𝓖
+#         # 𝝭 = ξ[:𝝭]
+#         ∂𝝭∂x = ξ[:∂𝝭∂x]
+#         ∂𝝭∂y = ξ[:∂𝝭∂y]
+#         u = 0.0
+#         for (i,x) in enumerate(a.𝓒)
+#             # u += 𝝭[i]*x.y
+#             u += ∂𝝭∂x[i]
+#         end
+#         # if abs(u - ξ.y) > 1e-13
+#         if abs(u - 0.0) > 1e-13
+#         # if abs(u) > 1e-13
+#             println(u)
+#             println(1.0)
+#             error("consistency condition is not satisfied")
+#         end
+#     end
+# end
 # for (a,b) in zip(elements["Ωˢᵖ"],elements["Ωᵖ"])
 #     𝓒 = a.𝓒
 #     for (ξa,ξb) in zip(a.𝓖,b.𝓖)
