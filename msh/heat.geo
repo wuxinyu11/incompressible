@@ -1,6 +1,6 @@
 a = 1.0;
 b = 1.0;
-n = 10;
+n = 30;
 
 Point(1) = {0.0, 0.0, 0.0};
 Point(2) = {  a, 0.0, 0.0};
@@ -25,6 +25,7 @@ Physical Curve("Γᵗ") = {};
 Physical Surface("Ω") = {1};
 
 //Mesh.ElementOrder = 2;
-Mesh.Algorithm = 8;
+Mesh.Algorithm = 1;
 Mesh.MshFileVersion = 2;
 Mesh 2;
+// RecombineMesh;

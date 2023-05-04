@@ -1,3 +1,210 @@
+function import_tri3(filename::String)
+    elms,nds = ApproxOperator.importmsh(filename)
+    nₚ = length(nds)
+    nodes = Node{(:𝐼,),1}[]
+    data = Dict([:x=>(1,zeros(nₚ)),:y=>(1,zeros(nₚ)),:z=>(1,zeros(nₚ))])
+    for (i,p) in enumerate(nds)
+        node = Node{(:𝐼,),1}((i,),data)
+        node.x = p.x
+        node.y = p.y
+        node.z = p.z
+        push!(nodes,node)
+    end
+
+    elements = Dict(["Ω"=>Element{:Tri3}[],"Ωᵉ"=>Element{:Tri3}[],"Γᵍ"=>Element{:Seg2}[],"Γᵗ"=>Element{:Seg2}[]])
+
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    G = 0
+    s = 0
+    ng = 3
+    gauss_scheme = :TriGI3
+    nₑ = length(elms["Ω"])
+
+    scheme = ApproxOperator.quadraturerule(gauss_scheme)
+    data_𝓖 = Dict([
+        :ξ=>(1,scheme[:ξ]),
+        :η=>(1,scheme[:η]),
+        :w=>(1,scheme[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :𝝭=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂x=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂y=>(4,zeros(ng*nₑ*3)),
+    ])
+    for (C,a) in enumerate(elms["Ω"])
+        element = Element{:Tri3}((c,3,𝓒),(g,ng,𝓖))
+        for v in a.vertices
+            i = v.i
+            push!(𝓒,nodes[i])
+        end
+        c += 3
+        𝐴 = ApproxOperator.get𝐴(a)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖,x)
+            s += 3
+        end
+        g += ng
+        push!(elements["Ω"],element)
+    end
+    
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    G = 0
+    s = 0
+    ng = 13
+    gauss_scheme = :TriGI13
+    nₑ = length(elms["Ω"])
+
+    scheme = ApproxOperator.quadraturerule(gauss_scheme)
+    data_𝓖ᵉ = Dict([
+        :ξ=>(1,scheme[:ξ]),
+        :η=>(1,scheme[:η]),
+        :w=>(1,scheme[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :𝝭=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂x=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂y=>(4,zeros(ng*nₑ*3)),
+    ])
+    for (C,a) in enumerate(elms["Ω"])
+        element = Element{:Tri3}((c,3,𝓒),(g,ng,𝓖))
+        for v in a.vertices
+            i = v.i
+            push!(𝓒,nodes[i])
+        end
+        c += 3
+        𝐴 = ApproxOperator.get𝐴(a)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖ᵉ)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖,x)
+            s += 3
+        end
+        g += ng
+        push!(elements["Ωᵉ"],element)
+    end
+
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    G = 0
+    s = 0
+    ng = 2 
+    gauss_scheme = :SegGI2
+    scheme = ApproxOperator.quadraturerule(gauss_scheme)
+    nₑ = length(elms["Γᵍ"])
+
+    data_𝓖 = Dict([
+        :ξ=>(1,scheme[:ξ]),
+        :w=>(1,scheme[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :𝝭=>(4,zeros(ng*nₑ*2)),
+    ])
+    for (C,a) in enumerate(elms["Γᵍ"])
+        element = Element{:Seg2}((c,2,𝓒),(g,ng,𝓖))
+        for v in a.vertices
+            i = v.i
+            push!(𝓒,nodes[i])
+        end
+        c += 2
+       
+        𝐿 = ApproxOperator.get𝐿(a)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            ξ = x.ξ
+            x_,y_,z_ = a(ξ)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐿*x.w/2
+            push!(𝓖,x)
+            s += 2
+        end
+        g += ng
+        push!(elements["Γᵍ"],element)
+    end
+
+    if haskey(elms,"Γᵗ")
+        𝓒 = Node{(:𝐼,),1}[]
+        𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+        c = 0
+        g = 0
+        G = 0
+        s = 0
+        ng = 2 
+        gauss_scheme = :SegGI2
+        scheme = ApproxOperator.quadraturerule(gauss_scheme)
+        nₑ = length(elms["Γᵗ"])
+
+        data_𝓖 = Dict([
+            :ξ=>(1,scheme[:ξ]),
+            :w=>(1,scheme[:w]),
+            :x=>(2,zeros(ng*nₑ)),
+            :y=>(2,zeros(ng*nₑ)),
+            :z=>(2,zeros(ng*nₑ)),
+            :𝑤=>(2,zeros(ng*nₑ)),
+            :n₁=>(2,zeros(ng*nₑ)),
+            :n₂=>(2,zeros(ng*nₑ)),
+            :𝝭=>(4,zeros(ng*nₑ*2)),
+        ])
+        for (C,a) in enumerate(elms["Γᵗ"])
+            element = Element{:Seg2}((c,2,𝓒),(g,ng,𝓖))
+            for v in a.vertices
+                i = v.i
+                push!(𝓒,nodes[i])
+            end
+            c += 2
+        
+            𝐿 = ApproxOperator.get𝐿(a)
+            for i in 1:ng
+                G += 1
+                x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+                ξ = x.ξ
+                x_,y_,z_ = a(ξ)
+                x.x = x_
+                x.y = y_
+                x.z = z_
+                x.𝑤 = 𝐿*x.w/2
+                push!(𝓖,x)
+                s += 2
+            end
+            g += ng
+            push!(elements["Γᵗ"],element)
+        end
+    end
+    return elements,nodes
+end
+
 function import_quad(filename::String)
     elms,nds = ApproxOperator.importmsh(filename)
     nₚ = length(nds)
@@ -146,7 +353,7 @@ function import_quad(filename::String)
             x.x = x_
             x.y = y_
             x.z = z_
-            x.𝑤 = 𝐿*x.w
+            x.𝑤 = 𝐿*x.w/2
             push!(𝓖,x)
             s += 2
         end
@@ -154,51 +361,53 @@ function import_quad(filename::String)
         push!(elements["Γᵍ"],element)
     end
 
-    𝓒 = Node{(:𝐼,),1}[]
-    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
-    c = 0
-    g = 0
-    G = 0
-    s = 0
-    ng = 2 
-    gauss_scheme = :SegGI2
-    scheme = ApproxOperator.quadraturerule(gauss_scheme)
-    nₑ = length(elms["Γᵗ"])
+    if haskey(elms,"Γᵗ")
+        𝓒 = Node{(:𝐼,),1}[]
+        𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+        c = 0
+        g = 0
+        G = 0
+        s = 0
+        ng = 2 
+        gauss_scheme = :SegGI2
+        scheme = ApproxOperator.quadraturerule(gauss_scheme)
+        nₑ = length(elms["Γᵗ"])
 
-    data_𝓖 = Dict([
-        :ξ=>(1,scheme[:ξ]),
-        :w=>(1,scheme[:w]),
-        :x=>(2,zeros(ng*nₑ)),
-        :y=>(2,zeros(ng*nₑ)),
-        :z=>(2,zeros(ng*nₑ)),
-        :𝑤=>(2,zeros(ng*nₑ)),
-        :n₁=>(2,zeros(ng*nₑ)),
-        :n₂=>(2,zeros(ng*nₑ)),
-        :𝝭=>(4,zeros(ng*nₑ*2)),
-    ])
-    for (C,a) in enumerate(elms["Γᵗ"])
-        element = Element{:Seg2}((c,2,𝓒),(g,ng,𝓖))
-        for v in a.vertices
-            i = v.i
-            push!(𝓒,nodes[i])
+        data_𝓖 = Dict([
+            :ξ=>(1,scheme[:ξ]),
+            :w=>(1,scheme[:w]),
+            :x=>(2,zeros(ng*nₑ)),
+            :y=>(2,zeros(ng*nₑ)),
+            :z=>(2,zeros(ng*nₑ)),
+            :𝑤=>(2,zeros(ng*nₑ)),
+            :n₁=>(2,zeros(ng*nₑ)),
+            :n₂=>(2,zeros(ng*nₑ)),
+            :𝝭=>(4,zeros(ng*nₑ*2)),
+        ])
+        for (C,a) in enumerate(elms["Γᵗ"])
+            element = Element{:Seg2}((c,2,𝓒),(g,ng,𝓖))
+            for v in a.vertices
+                i = v.i
+                push!(𝓒,nodes[i])
+            end
+            c += 2
+        
+            𝐿 = ApproxOperator.get𝐿(a)
+            for i in 1:ng
+                G += 1
+                x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+                ξ = x.ξ
+                x_,y_,z_ = a(ξ)
+                x.x = x_
+                x.y = y_
+                x.z = z_
+                x.𝑤 = 𝐿*x.w/2
+                push!(𝓖,x)
+                s += 2
+            end
+            g += ng
+            push!(elements["Γᵗ"],element)
         end
-        c += 2
-       
-        𝐿 = ApproxOperator.get𝐿(a)
-        for i in 1:ng
-            G += 1
-            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
-            ξ = x.ξ
-            x_,y_,z_ = a(ξ)
-            x.x = x_
-            x.y = y_
-            x.z = z_
-            x.𝑤 = 𝐿*x.w
-            push!(𝓖,x)
-            s += 2
-        end
-        g += ng
-        push!(elements["Γᵗ"],element)
     end
     return elements,nodes
 end
@@ -455,6 +664,7 @@ function import_rkgsi(filename::String)
     parameters = (:Quadratic2D,:□,:CubicSpline)
     scheme_Ω = ApproxOperator.quadraturerule(:TriRK6)
     scheme_Ω̃ = ApproxOperator.quadraturerule(:TriGI3)
+    scheme_Ωᵉ = ApproxOperator.quadraturerule(:TriGI13)
     n𝒑 = 21
     n𝒑̃ = 6
 
@@ -462,19 +672,26 @@ function import_rkgsi(filename::String)
         "Ω"=>ReproducingKernel{parameters...,:Tri3}[],
         "Ω̃"=>RKGradientSmoothing{parameters...,:Tri3}[],
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
-        "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[]
+        "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
+        "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
+    𝓒ᵉ = Node{(:𝐼,),1}[]
     𝓖_Ω = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
     𝓖_Ω̃ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ωᵉ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
     c = 0
+    cᵉ = 0
     g_Ω = 0
     g_Ω̃ = 0
+    g_Ωᵉ = 0
     ng_Ω = 6
     ng_Ω̃ = 3
+    ng_Ωᵉ = 13
     ns_Ω = 0
     ns_Ω̃ = 0
+    ns_Ωᵉ = 0
     nₑ = length(elms["Ω"])
 
     for (C,a) in enumerate(elms["Ω"])
@@ -499,6 +716,24 @@ function import_rkgsi(filename::String)
         g_Ω̃ += ng_Ω̃
         ns_Ω += nc*ng_Ω
         ns_Ω̃ += nc*ng_Ω̃
+
+        indices = Set{Int}()
+        for i in 1:ng_Ωᵉ
+            ξ = scheme_Ωᵉ[:ξ][i]
+            η = scheme_Ωᵉ[:η][i]
+            x,y,z = a(ξ,η)
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒ᵉ,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Tri3}((cᵉ,nc,𝓒ᵉ),(g_Ωᵉ,ng_Ωᵉ,𝓖_Ωᵉ))
+        push!(elements["Ωᵉ"],element)
+
+        cᵉ += nc
+        g_Ωᵉ += ng_Ωᵉ
+        ns_Ωᵉ += nc*ng_Ωᵉ
     end
 
     data_𝓖_Ω = Dict([
@@ -534,11 +769,28 @@ function import_rkgsi(filename::String)
         :∂𝝭∂y=>(4,zeros(ns_Ω̃)),
         :∇̃=>(0,zeros(n𝒑̃)),
     ])
+    data_𝓖_Ωᵉ = Dict([
+        :ξ=>(1,scheme_Ωᵉ[:ξ]),
+        :η=>(1,scheme_Ωᵉ[:η]),
+        :w=>(1,scheme_Ωᵉ[:w]),
+        :x=>(2,zeros(g_Ωᵉ)),
+        :y=>(2,zeros(g_Ωᵉ)),
+        :z=>(2,zeros(g_Ωᵉ)),
+        :𝑤=>(2,zeros(g_Ωᵉ)),
+        :𝝭=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂x=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂y=>(4,zeros(ns_Ωᵉ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+    ])
     
     G_Ω = 0
     s_Ω = 0
     G_Ω̃ = 0
     s_Ω̃ = 0
+    G_Ωᵉ = 0
+    s_Ωᵉ = 0
     for (C,a) in enumerate(elms["Ω"])
         𝐴 = ApproxOperator.get𝐴(a)
         x₁ = a.vertices[1].x
@@ -594,6 +846,19 @@ function import_rkgsi(filename::String)
         elements["Ω̃"][C].D₂₂ = D₂₂
         elements["Ω̃"][C].D₃₁ = D₃₁
         elements["Ω̃"][C].D₃₂ = D₃₂
+        for i in 1:ng_Ωᵉ
+            G_Ωᵉ += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ωᵉ,C,s_Ωᵉ),data_𝓖_Ωᵉ)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖_Ωᵉ,x)
+            s_Ωᵉ += getfield(elements["Ωᵉ"][C],:𝓒)[2]
+        end
     end
     
     if haskey(elms,"Γᵗ")
@@ -1226,3 +1491,464 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
     return elements,nodes,nodes_𝑝
 end
     
+function import_rkgsi_fem(fid1::String,fid2::String)
+    elms,nds = ApproxOperator.importmsh(fid1)
+    nₚ = length(nds)
+    nodes = Node{(:𝐼,),1}[]
+    x = zeros(nₚ)
+    y = zeros(nₚ)
+    z = zeros(nₚ)
+    data = Dict([:x=>(1,x),:y=>(1,y),:z=>(1,z)])
+    for (i,p) in enumerate(nds)
+        node = Node{(:𝐼,),1}((i,),data)
+        node.x = p.x
+        node.y = p.y
+        node.z = p.z
+        push!(nodes,node)
+    end
+    sp = ApproxOperator.RegularGrid(x,y,z,n=3,γ=5)
+
+    elms_fem,nds_fem = ApproxOperator.importmsh(fid2)
+    nₚ_𝑝 = length(nds_fem)
+    points = Node{(:𝐼,),1}[]
+    x = zeros(nₚ_𝑝)
+    y = zeros(nₚ_𝑝)
+    z = zeros(nₚ_𝑝)
+    data = Dict([:x=>(1,x),:y=>(1,y),:z=>(1,z)])
+    for (i,p) in enumerate(nds_fem)
+        node = Node{(:𝐼,),1}((i,),data)
+        node.x = p.x
+        node.y = p.y
+        node.z = p.z
+        push!(points,node)
+    end
+
+    parameters = (:Quadratic2D,:□,:CubicSpline)
+
+    elements = Dict([
+        "Ω"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᶠ"=>Element{:Tri3}[],
+        "Ω̃"=>RKGradientSmoothing{parameters...,:Tri3}[],
+        "Ω̄"=>FRKGradientSmoothing{parameters...,:Tri3}[],
+        "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
+        "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
+        "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
+    ])
+    scheme_Ω = ApproxOperator.quadraturerule(:TriRK6)
+    scheme_Ω̃ = ApproxOperator.quadraturerule(:TriGI3)
+    scheme_Ωᵉ = ApproxOperator.quadraturerule(:TriGI13)
+    n𝒑 = 21
+    n𝒑̃ = 6
+
+    𝗚 = zeros(nₚ_𝑝,nₚ_𝑝)
+    𝗴₁ = zeros(nₚ_𝑝,nₚ)
+    𝗴₂ = zeros(nₚ_𝑝,nₚ)
+
+    𝓒ᶠ = Node{(:𝐼,),1}[]
+    𝓖ᶠ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    G = 0
+    s = 0
+    ng = 6
+    nₑ = length(elms["Ω"])
+
+    data_𝓖 = Dict([
+        :ξ=>(1,scheme_Ω[:ξ]),
+        :η=>(1,scheme_Ω[:η]),
+        :w=>(1,scheme_Ω[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :𝝭=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂x=>(4,zeros(ng*nₑ*3)),
+        :∂𝝭∂y=>(4,zeros(ng*nₑ*3)),
+    ])
+    for (C,a) in enumerate(elms_fem["Ω"])
+        element = Element{:Tri3}((c,3,𝓒ᶠ),(g,ng,𝓖ᶠ))
+        for v in a.vertices
+            i = v.i
+            push!(𝓒ᶠ,points[i])
+        end
+        c += 3
+        𝐴 = ApproxOperator.get𝐴(a)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖ᶠ,x)
+            s += 3
+        end
+        g += ng
+        push!(elements["Ωᶠ"],element)
+    end
+
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓒ᵉ = Node{(:𝐼,),1}[]
+    𝓖_Ω = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ω̃ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ω̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ωᵉ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    cᶠ = 0
+    cᵉ = 0
+    g_Ω = 0
+    g_Ω̃ = 0
+    g_Ωᵉ = 0
+    ng_Ω = 6
+    ng_Ω̃ = 3
+    ng_Ωᵉ = 13
+    ns_Ω = 0
+    ns_Ω̃ = 0
+    ns_Ωᵉ = 0
+    nₑ = length(elms["Ω"])
+
+    for (C,a) in enumerate(elms["Ω"])
+        indices = Set{Int}()
+        for i in 1:ng_Ω
+            ξ = scheme_Ω[:ξ][i]
+            η = scheme_Ω[:η][i]
+            x,y,z = a(ξ,η)
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒,nodes[i])
+        end
+        element_Ω = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g_Ω,ng_Ω,𝓖_Ω))
+        element_Ω̃ = RKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(g_Ω̃,ng_Ω̃,𝓖_Ω̃),(g_Ω,ng_Ω,𝓖_Ω))
+        element_Ω̄ = FRKGradientSmoothing{parameters...,:Tri3}((0,nₚ,nodes),(c,nc,𝓒),(cᶠ,3,𝓒ᶠ),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖ᶠ),𝗚,𝗴₁,𝗴₂)
+        push!(elements["Ω"],element_Ω)
+        push!(elements["Ω̃"],element_Ω̃)
+        push!(elements["Ω̄"],element_Ω̄)
+
+        c += nc
+        cᶠ += 3
+        g_Ω += ng_Ω
+        g_Ω̃ += ng_Ω̃
+        ns_Ω += nc*ng_Ω
+        ns_Ω̃ += nc*ng_Ω̃
+
+        indices = Set{Int}()
+        for i in 1:ng_Ωᵉ
+            ξ = scheme_Ωᵉ[:ξ][i]
+            η = scheme_Ωᵉ[:η][i]
+            x,y,z = a(ξ,η)
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒ᵉ,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Tri3}((cᵉ,nc,𝓒ᵉ),(g_Ωᵉ,ng_Ωᵉ,𝓖_Ωᵉ))
+        push!(elements["Ωᵉ"],element)
+
+        cᵉ += nc
+        g_Ωᵉ += ng_Ωᵉ
+        ns_Ωᵉ += nc*ng_Ωᵉ
+    end
+
+    data_𝓖_Ω = Dict([
+        :ξ=>(1,scheme_Ω[:ξ]),
+        :η=>(1,scheme_Ω[:η]),
+        :w=>(1,scheme_Ω[:w]),
+        :wᵇ=>(1,scheme_Ω[:wᵇ]),
+        :D₁=>(2,zeros(g_Ω)),
+        :D₂=>(2,zeros(g_Ω)),
+        :x=>(2,zeros(g_Ω)),
+        :y=>(2,zeros(g_Ω)),
+        :z=>(2,zeros(g_Ω)),
+        :𝑤=>(2,zeros(g_Ω)),
+        :𝝭=>(4,zeros(ns_Ω)),
+        :𝗠=>(0,zeros(n𝒑)),
+    ])
+    x̃ = zeros(g_Ω̃)
+    ỹ = zeros(g_Ω̃)
+    z̃ = zeros(g_Ω̃)
+    𝑤̃ = zeros(g_Ω̃)
+    𝐴 = zeros(nₑ)
+    D₁₁ = zeros(nₑ)
+    D₁₂ = zeros(nₑ)
+    D₂₁ = zeros(nₑ)
+    D₂₂ = zeros(nₑ)
+    D₃₁ = zeros(nₑ)
+    D₃₂ = zeros(nₑ)
+    data_𝓖_Ω̃ = Dict([
+        :ξ=>(1,scheme_Ω̃[:ξ]),
+        :η=>(1,scheme_Ω̃[:η]),
+        :w=>(1,scheme_Ω̃[:w]),
+        :x=>(2,x̃),
+        :y=>(2,ỹ),
+        :z=>(2,z̃),
+        :𝑤=>(2,𝑤̃),
+        :𝐴=>(3,𝐴),
+        :D₁₁=>(3,D₁₁),
+        :D₁₂=>(3,D₁₂),
+        :D₂₁=>(3,D₂₁),
+        :D₂₂=>(3,D₂₂),
+        :D₃₁=>(3,D₃₁),
+        :D₃₂=>(3,D₃₂),
+        :∂𝝭∂x=>(4,zeros(ns_Ω̃)),
+        :∂𝝭∂y=>(4,zeros(ns_Ω̃)),
+        :∇̃=>(0,zeros(n𝒑̃)),
+    ])
+    data_𝓖_Ω̄ = Dict([
+        :ξ=>(1,scheme_Ω̃[:ξ]),
+        :η=>(1,scheme_Ω̃[:η]),
+        :w=>(1,scheme_Ω̃[:w]),
+        :x=>(2,x̃),
+        :y=>(2,ỹ),
+        :z=>(2,z̃),
+        :𝑤=>(2,𝑤̃),
+        :𝐴=>(3,𝐴),
+        :D₁₁=>(3,D₁₁),
+        :D₁₂=>(3,D₁₂),
+        :D₂₁=>(3,D₂₁),
+        :D₂₂=>(3,D₂₂),
+        :D₃₁=>(3,D₃₁),
+        :D₃₂=>(3,D₃₂),
+        :∂𝝭∂x=>(4,zeros(nₑ*ng_Ω̃*nₚ)),
+        :∂𝝭∂y=>(4,zeros(nₑ*ng_Ω̃*nₚ)),
+    ])
+    data_𝓖_Ωᵉ = Dict([
+        :ξ=>(1,scheme_Ωᵉ[:ξ]),
+        :η=>(1,scheme_Ωᵉ[:η]),
+        :w=>(1,scheme_Ωᵉ[:w]),
+        :x=>(2,zeros(g_Ωᵉ)),
+        :y=>(2,zeros(g_Ωᵉ)),
+        :z=>(2,zeros(g_Ωᵉ)),
+        :𝑤=>(2,zeros(g_Ωᵉ)),
+        :𝝭=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂x=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂y=>(4,zeros(ns_Ωᵉ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+    ])
+    
+    G_Ω = 0
+    s_Ω = 0
+    G_Ω̃ = 0
+    s_Ω̃ = 0
+    G_Ωᵉ = 0
+    s_Ωᵉ = 0
+    for (C,a) in enumerate(elms["Ω"])
+        𝐴 = ApproxOperator.get𝐴(a)
+        x₁ = a.vertices[1].x
+        x₂ = a.vertices[2].x
+        x₃ = a.vertices[3].x
+        y₁ = a.vertices[1].y
+        y₂ = a.vertices[2].y
+        y₃ = a.vertices[3].y
+        D₁₁ = y₃-y₂
+        D₁₂ = x₂-x₃
+        D₂₁ = y₁-y₃
+        D₂₂ = x₃-x₁
+        D₃₁ = y₂-y₁
+        D₃₂ = x₁-x₂
+        for i in 1:ng_Ω
+            G_Ω += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω,C,s_Ω),data_𝓖_Ω)
+            ξ = x.ξ
+            η = x.η
+            D₁ = 0.0
+            D₂ = 0.0
+            if ξ ≈ 0.0 (D₁ += D₁₁;D₂ += D₁₂) end
+            if η ≈ 0.0 (D₁ += D₂₁;D₂ += D₂₂) end
+            if ξ+η ≈ 1.0 (D₁ += D₃₁;D₂ += D₃₂) end
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            x.D₁ = D₁
+            x.D₂ = D₂
+            push!(𝓖_Ω,x)
+            s_Ω += getfield(elements["Ω"][C],:𝓒)[2]
+        end
+        for i in 1:ng_Ω̃
+            G_Ω̃ += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̃)
+            x̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̄)
+            ξ = x.ξ
+            η = x.η
+                
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖_Ω̃,x)
+            push!(𝓖_Ω̄,x̄)
+            s_Ω̃ += getfield(elements["Ω"][C],:𝓒)[2]
+        end
+        elements["Ω̃"][C].𝐴 = 𝐴
+        elements["Ω̃"][C].D₁₁ = D₁₁
+        elements["Ω̃"][C].D₁₂ = D₁₂
+        elements["Ω̃"][C].D₂₁ = D₂₁
+        elements["Ω̃"][C].D₂₂ = D₂₂
+        elements["Ω̃"][C].D₃₁ = D₃₁
+        elements["Ω̃"][C].D₃₂ = D₃₂
+        for i in 1:ng_Ωᵉ
+            G_Ωᵉ += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ωᵉ,C,s_Ωᵉ),data_𝓖_Ωᵉ)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖_Ωᵉ,x)
+            s_Ωᵉ += getfield(elements["Ωᵉ"][C],:𝓒)[2]
+        end
+    end
+    
+    if haskey(elms,"Γᵗ")
+        𝓒 = Node{(:𝐼,),1}[]
+        𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+        c = 0
+        g = 0
+        ng = 3
+        ns = 0
+        gauss_scheme = :SegRK3
+        scheme = ApproxOperator.quadraturerule(gauss_scheme)
+        nₑ = length(elms["Γᵗ"])
+
+        for (C,a) in enumerate(elms["Γᵗ"])
+            indices = Set{Int}()
+            for i in 1:ng
+                ξ = scheme[:ξ][i]
+                x,y,z = a(ξ)
+                union!(indices,sp(x,y,z))
+            end
+            nc = length(indices)
+            for i in indices
+                push!(𝓒,nodes[i])
+            end
+            element = ReproducingKernel{parameters...,:Seg2}((c,nc,𝓒),(g,ng,𝓖))
+            push!(elements["Γᵗ"],element)
+            c += nc
+            g += ng
+            ns += ng*nc
+        end
+
+        G = 0
+        s = 0
+        data_𝓖 = Dict([
+            :ξ=>(1,scheme[:ξ]),
+            :w=>(1,scheme[:w]),
+            :x=>(2,zeros(ng*nₑ)),
+            :y=>(2,zeros(ng*nₑ)),
+            :z=>(2,zeros(ng*nₑ)),
+            :𝑤=>(2,zeros(ng*nₑ)),
+            :n₁=>(3,zeros(nₑ)),
+            :n₂=>(3,zeros(nₑ)),
+            :𝗠=>(0,zeros(n𝒑)),
+            :𝝭=>(4,zeros(ns))
+        ])
+        for (C,a) in enumerate(elms["Γᵗ"])
+            𝐿 = ApproxOperator.get𝐿(a)
+            x₁ = a.vertices[1].x
+            x₂ = a.vertices[2].x
+            y₁ = a.vertices[1].y
+            y₂ = a.vertices[2].y
+            n₁ = (y₂-y₁)/𝐿
+            n₂ = (x₁-x₂)/𝐿
+            for i in 1:ng
+                G += 1
+                x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+                ξ = x.ξ
+                x_,y_,z_ = a(ξ)
+                x.x = x_
+                x.y = y_
+                x.z = z_
+                x.𝑤 = 𝐿*x.w/2
+                push!(𝓖,x)
+                s += getfield(elements["Γᵗ"][C],:𝓒)[2]
+            end
+            elements["Γᵗ"][C].n₁ = n₁
+            elements["Γᵗ"][C].n₂ = n₂
+        end
+    end
+
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    ng = 3
+    ns = 0
+    gauss_scheme = :SegRK3
+    scheme = ApproxOperator.quadraturerule(gauss_scheme)
+    nₑ = length(elms["Γᵍ"])
+
+    for (C,a) in enumerate(elms["Γᵍ"])
+        indices = Set{Int}()
+        for i in 1:ng
+            ξ = scheme[:ξ][i]
+            x,y,z = a(ξ)
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Seg2}((c,nc,𝓒),(g,ng,𝓖))
+        push!(elements["Γᵍ"],element)
+        c += nc
+        g += ng
+        ns += ng*nc
+    end
+       
+    G = 0
+    s = 0
+    data_𝓖 = Dict([
+        :ξ=>(1,scheme[:ξ]),
+        :w=>(1,scheme[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :n₁=>(3,zeros(nₑ)),
+        :n₂=>(3,zeros(nₑ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+        :𝝭=>(4,zeros(ns)),
+        :∂𝝭∂x=>(4,zeros(ns)),
+        :∂𝝭∂y=>(4,zeros(ns))
+    ])
+    for (C,a) in enumerate(elms["Γᵍ"])
+        𝐿 = ApproxOperator.get𝐿(a)
+        x₁ = a.vertices[1].x
+        x₂ = a.vertices[2].x
+        y₁ = a.vertices[1].y
+        y₂ = a.vertices[2].y
+        n₁ = (y₂-y₁)/𝐿
+        n₂ = (x₁-x₂)/𝐿
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            ξ = x.ξ
+            x_,y_,z_ = a(ξ)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐿*x.w/2
+            push!(𝓖,x)
+            s += getfield(elements["Γᵍ"][C],:𝓒)[2]
+        end
+        elements["Γᵍ"][C].n₁ = n₁
+        elements["Γᵍ"][C].n₂ = n₂
+    end
+
+
+    return elements,nodes
+end
