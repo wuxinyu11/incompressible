@@ -26,8 +26,8 @@ prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
 ops = [
-    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫vᵢuᵢds}(:α=>1e15*E),
 ]

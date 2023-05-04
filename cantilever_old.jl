@@ -3,8 +3,8 @@ using YAML, ApproxOperator, XLSX, TimerOutputs
 
 
 ndiv = 64
-config = YAML.load_file("./yml/cantilever.yml")
-elements, nodes = importmsh("./msh/cantilever_"*string(ndiv)*".msh",config)
+config = YAML.load_file("./yml/cantilever_gauss_nitsche_quadratic.yml")
+elements, nodes = ApproxOperator.importmsh("./msh/cantilever_"*string(ndiv)*".msh",config)
 
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])

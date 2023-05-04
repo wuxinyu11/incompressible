@@ -1,5 +1,5 @@
 
-using Revise, ApproxOperator, LinearAlgebra, Printf
+using  Revise,ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
 fid_𝑢 = "./msh/cook_membrance_10.msh"
@@ -36,10 +36,18 @@ prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
 ops = [
-    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫vᵢuᵢds}(:α=>1e15*E),
+]
+opsᵛ = [
+    Operator{:Δ∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+]
+opsᵈ = [
+    Operator{:Δ∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
 ]
 
 k = zeros(2*nₚ,2*nₚ)
