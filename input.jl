@@ -1739,6 +1739,7 @@ function import_rkgsi_fem(fid1::String,fid2::String)
     s_Ω̃ = 0
     G_Ωᵉ = 0
     s_Ωᵉ = 0
+    s_Ω̄ = 0
     for (C,a) in enumerate(elms["Ω"])
         𝐴 = ApproxOperator.get𝐴(a)
         x₁ = a.vertices[1].x
@@ -1776,7 +1777,7 @@ function import_rkgsi_fem(fid1::String,fid2::String)
         for i in 1:ng_Ω̃
             G_Ω̃ += 1
             x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̃)
-            x̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̄)
+            x̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̄),data_𝓖_Ω̄)
             ξ = x.ξ
             η = x.η
                 
@@ -1788,6 +1789,7 @@ function import_rkgsi_fem(fid1::String,fid2::String)
             push!(𝓖_Ω̃,x)
             push!(𝓖_Ω̄,x̄)
             s_Ω̃ += getfield(elements["Ω"][C],:𝓒)[2]
+            s_Ω̄ += nₚ
         end
         elements["Ω̃"][C].𝐴 = 𝐴
         elements["Ω̃"][C].D₁₁ = D₁₁

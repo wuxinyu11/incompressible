@@ -1,36 +1,30 @@
 
-using YAML, ApproxOperator, XLSX, TimerOutputs
+using Revise, ApproxOperator, LinearAlgebra, Printf
+include("input.jl")
 
 ndiv = 8
 
-𝒑 = "linear"
-# 𝒑 = "quadratic"
+fid_𝑢 = "./msh/cantilever_"*string(ndiv)*".msh"
+fid_𝑝 = "./msh/cantilever_"*string(ndiv)*".msh"
 
-config = YAML.load_file("./yml/cantilever_rkgsi_hr_"*𝒑*".yml")
-elements, nodes = importmsh("./msh/cantilever_"*string(ndiv)*".msh", config)
+elements, nodes = import_rkgsi_fem(fid_𝑢,fid_𝑝)
+
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
 
 #  s = 3*12 / ndiv * ones(nₚ)
- s = 1.5*12 / ndiv * ones(nₚ)
+ s = 2.5*12 / ndiv * ones(nₚ)
 
 
  push!(nodes, :s₁ => s, :s₂ => s, :s₃ => s)
 
- set_memory_𝗠!(elements["Ω̃"],:∇̃)
- set_memory_𝗠!(elements["Ω₁"],:∇̃)
- set_memory_𝗠!(elements["Γᵍ"],:𝝭,:∂𝝭∂x,:∂𝝭∂y,:∇̃)
-
- elements["Ω∩Γᵍ"] = elements["Ω"]∩elements["Γᵍ"]
-
-set∇₂𝝭!(elements["Ω"])
-set∇̃𝝭!(elements["Ω̃"],elements["Ω"])
-set∇₂𝝭!(elements["Ω"])
-set∇̃𝝭!(elements["Ω₁"],elements["Ω"])
-# set∇̃𝝭!(elements["Γᵍ"],elements["Ω∩Γᵍ"])
-
-set∇₂𝝭!(elements["Γᵍ"])
-set𝝭!(elements["Γᵗ"])
+set𝝭!(elements["Ω"])
+set∇𝝭!(elements["Ω̃"])
+set𝝭!(elements["Ωᶠ"])
+set∇𝝭!(elements["Ωᶠ"])
+set∇𝝭!(elements["Ω̄"])
+set∇𝝭!(elements["Γᵍ"])
+set∇𝝭!(elements["Ωᵉ"])
 
 P = 1000
 Ē = 3e6
@@ -42,6 +36,7 @@ L = 48
 D = 12
 I = D^3/12
 EI = E*I
+prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.0)
 prescribe!(elements["Γᵗ"],:t₂=>(x,y,z)->P/2/I*(D^2/4-y^2))
 prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
 prescribe!(elements["Γᵍ"],:g₂=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
