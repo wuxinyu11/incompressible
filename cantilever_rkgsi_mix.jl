@@ -2,27 +2,28 @@
 using Revise, ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-ndiv_𝑢 = 16
+ndiv_𝑢 = 8
 ndiv_𝑝 = 8
 
 fid_𝑢 = "./msh/cantilever_"*string(ndiv_𝑢)*".msh"
 fid_𝑝 = "./msh/cantilever_"*string(ndiv_𝑝)*".msh"
 
-elements, nodes = import_rkgsi_fem(fid_𝑢,fid_𝑝)
+elements, nodes, nodes_𝑝 = import_rkgsi_mix_quadratic(fid_𝑢,fid_𝑝)
 
-nₚ = length(nodes)
 nₑ = length(elements["Ω"])
 
-#  s = 3*12 / ndiv * ones(nₚ)
- s = 2.5*12 / ndiv * ones(nₚ)
-
-
- push!(nodes, :s₁ => s, :s₂ => s, :s₃ => s)
+nᵤ = length(nodes)
+nₚ = length(nodes)
+sᵤ = 2.5*12/ndiv_𝑢*ones(nᵤ)
+push!(nodes,:s₁=>sᵤ,:s₂=>sᵤ,:s₃=>sᵤ)
+sₚ = 2.5*12/ndiv_𝑝*ones(nₚ)
+push!(nodes_𝑝,:s₁=>sₚ,:s₂=>sₚ,:s₃=>sₚ)
 
 set𝝭!(elements["Ω"])
 set∇𝝭!(elements["Ω̃"])
-set𝝭!(elements["Ωᶠ"])
-set∇𝝭!(elements["Ωᶠ"])
+set𝝭!(elements["Ωˢᵖ"])
+set𝝭!(elements["Ωᵖ"])
+set𝝭!(elements["Ω̃ᵖ"])
 set∇𝝭!(elements["Ω̄"])
 set𝝭!(elements["Γᵗ"])
 set∇𝝭!(elements["Γᵍ"])
@@ -53,7 +54,7 @@ ops = [
     Operator{:∫∫εᵈᵢⱼσᵈᵢⱼdxdy}(:E=>Ē,:ν=>ν̄),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-    Operator{:∫vᵢgᵢds}(:α=>1e3*E),
+    Operator{:∫vᵢgᵢds}(:α=>1e7*E),
     Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 
@@ -67,11 +68,11 @@ ops[1](elements["Ω̃"],k)
 ops[2](elements["Ω̄"],kᵛ)
 ops[3](elements["Ω̃"],kᵈ)
 ops[4](elements["Γᵗ"],f)
-ops[5](elements["Γᵍ"],kα,f)
+# ops[5](elements["Γᵍ"],kα,f)
 ops[6](elements["Γᵍ"],kα,f)
 
-d = (k+kα)\f
-# d = (kᵛ+kᵈ+kα)\f
+# d = (k+kα)\f
+d = (kᵛ+kᵈ+kα)\f
 
 d₁ = d[1:2:2*nₚ]
 d₂ = d[2:2:2*nₚ]

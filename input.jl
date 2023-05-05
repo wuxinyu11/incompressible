@@ -1038,7 +1038,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
     parameters = (:Quadratic2D,:□,:CubicSpline)
     scheme_Ω = ApproxOperator.quadraturerule(:TriRK6)
     scheme_Ω̃ = ApproxOperator.quadraturerule(:TriGI3)
-    scheme_Ωₑ = ApproxOperator.quadraturerule(:TriGI16)
+    scheme_Ωₑ = ApproxOperator.quadraturerule(:TriGI13)
     n𝒑 = 21
     n𝒑̃ = 6
 
@@ -1051,7 +1051,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         "Ω̄"=>GRKGradientSmoothing{parameters...,:Tri3}[],
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
-        "Ωₑ"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
@@ -1070,7 +1070,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
     g_Ωₑ = 0
     ng_Ω = 6
     ng_Ω̃ = 3
-    ng_Ωₑ = 16
+    ng_Ωₑ = 13
     ns_Ω = 0
     ns_Ω̃ = 0
     ns_Ωᵖ = 0
@@ -1104,7 +1104,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         element_Ωᵖ = RKGradientSmoothing{parameters...,:Tri3}((cᵖ,ncᵖ,𝓒ᵖ),(g_Ω,ng_Ω,𝓖_Ωᵖ),(g_Ω,ng_Ω,𝓖_Ωˢᵖ))
         element_Ω̃ = RKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(g_Ω̃,ng_Ω̃,𝓖_Ω̃),(g_Ω,ng_Ω,𝓖_Ω))
         element_Ω̃ᵖ = RKGradientSmoothing{parameters...,:Tri3}((cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ωˢᵖ))
-        element_Ω̄ = GRKGradientSmoothing{parameters...,:Tri3}((c,nc,𝓒),(cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖_Ωᵖ),𝗚,𝗴₁,𝗴₂)
+        element_Ω̄ = GRKGradientSmoothing{parameters...,:Tri3}((0,nₚ,nodes),(c,nc,𝓒),(cᵖ,ncᵖ,𝓒ᵖ),(g_Ω̃,ng_Ω̃,𝓖_Ω̄),(g_Ω̃,ng_Ω̃,𝓖_Ω̃ᵖ),(g_Ω,ng_Ω,𝓖_Ω),(g_Ω,ng_Ω,𝓖_Ωᵖ),𝗚,𝗴₁,𝗴₂)
         element_Ωₑ = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g_Ωₑ,ng_Ωₑ,𝓖_Ωₑ))
         push!(elements["Ω"],element_Ω)
         push!(elements["Ωˢᵖ"],element_Ωˢᵖ)
@@ -1112,7 +1112,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         push!(elements["Ω̃"],element_Ω̃)
         push!(elements["Ω̃ᵖ"],element_Ω̃ᵖ)
         push!(elements["Ω̄"],element_Ω̄)
-        push!(elements["Ωₑ"],element_Ωₑ)
+        push!(elements["Ωᵉ"],element_Ωₑ)
 
         c += nc
         cᵖ += ncᵖ
@@ -1269,6 +1269,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
     s_Ω̃ = 0
     s_Ω̃ᵖ = 0
     s_Ωₑ = 0
+    s_Ω̄ = 0
     for (C,a) in enumerate(elms["Ω"])
         𝐴 = ApproxOperator.get𝐴(a)
         x₁ = a.vertices[1].x
@@ -1312,7 +1313,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
             G_Ω̃ += 1
             x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̃)
             x_𝑝 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃ᵖ),data_𝓖_Ω̃ᵖ)
-            x̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̃),data_𝓖_Ω̄)
+            x̄ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ω̃,C,s_Ω̄),data_𝓖_Ω̄)
             ξ = x.ξ
             η = x.η
                 
@@ -1326,6 +1327,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
             push!(𝓖_Ω̄,x̄)
             s_Ω̃ += getfield(elements["Ω"][C],:𝓒)[2]
             s_Ω̃ᵖ += getfield(elements["Ωᵖ"][C],:𝓒)[2]
+            s_Ω̄ += nₚ
         end
         for i in 1:ng_Ωₑ
             G_Ωₑ += 1
@@ -1492,7 +1494,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
 end
     
 function import_rkgsi_fem(fid1::String,fid2::String)
-    elms,nds = ApproxOperator.importmsh(fid1)
+    ~,nds = ApproxOperator.importmsh(fid1)
     nₚ = length(nds)
     nodes = Node{(:𝐼,),1}[]
     x = zeros(nₚ)
@@ -1508,7 +1510,7 @@ function import_rkgsi_fem(fid1::String,fid2::String)
     end
     sp = ApproxOperator.RegularGrid(x,y,z,n=3,γ=5)
 
-    elms_fem,nds_fem = ApproxOperator.importmsh(fid2)
+    elms,nds_fem = ApproxOperator.importmsh(fid2)
     nₚ_𝑝 = length(nds_fem)
     points = Node{(:𝐼,),1}[]
     x = zeros(nₚ_𝑝)
@@ -1565,7 +1567,7 @@ function import_rkgsi_fem(fid1::String,fid2::String)
         :∂𝝭∂x=>(4,zeros(ng*nₑ*3)),
         :∂𝝭∂y=>(4,zeros(ng*nₑ*3)),
     ])
-    for (C,a) in enumerate(elms_fem["Ω"])
+    for (C,a) in enumerate(elms["Ω"])
         element = Element{:Tri3}((c,3,𝓒ᶠ),(g,ng,𝓖ᶠ))
         for v in a.vertices
             i = v.i
