@@ -13,7 +13,7 @@ include("input.jl")
 elements, nodes = import_rkgsi("./msh/cantilever_"*string(ndiv)*".msh")
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
-s = 3.1*12.0/ndiv*ones(nₚ)
+s = 2.5*12.0/ndiv*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 # nₚ = length(nodes)
@@ -64,7 +64,7 @@ ops = [
        Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
        Operator{:∫vᵢtᵢds}(),
        Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-       Operator{:∫vᵢgᵢds}(:α=>1e7*E),
+       Operator{:∫vᵢgᵢds}(:α=>1e3*E),
        Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 k = zeros(2*nₚ,2*nₚ)
@@ -82,15 +82,11 @@ d = k\f
 d₁ .= d[1:2:2*nₚ]
 d₂ .= d[2:2:2*nₚ]
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
-set𝝭!(elements["Ω"])
-set∇𝝭!(elements["Ω̃"])
-# set∇𝝭!(elements["Ω"])
-        prescribe!(elements["Ω"],:u=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
-        prescribe!(elements["Ω"],:v=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
-        prescribe!(elements["Ω"],:∂u∂x=>(x,y,z)->-P/EI*(L-x)*y)
-        prescribe!(elements["Ω"],:∂u∂y=>(x,y,z)->-P/6/EI*((6*L-3*x)*x + (2+ν)*(3*y^2-D^2/4)))
-        prescribe!(elements["Ω"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
-        prescribe!(elements["Ω"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
-        # h1,l2 = ops[4](elements["Ω̄"])
-        he,l2 = ops[5](elements["Ω"])
-       #  he,l2 = ops[5](elements["Ω̄"])
+set∇𝝭!(elements["Ωᵉ"])
+prescribe!(elements["Ωᵉ"],:u=>(x,y,z)->-P*y/6/EI*((6*L-3x)*x + (2+ν)*(y^2-D^2/4)))
+prescribe!(elements["Ωᵉ"],:v=>(x,y,z)->P/6/EI*(3*ν*y^2*(L-x) + (4+5*ν)*D^2*x/4 + (3*L-x)*x^2))
+prescribe!(elements["Ωᵉ"],:∂u∂x=>(x,y,z)->-P/EI*(L-x)*y)
+prescribe!(elements["Ωᵉ"],:∂u∂y=>(x,y,z)->-P/6/EI*((6*L-3*x)*x + (2+ν)*(3*y^2-D^2/4)))
+prescribe!(elements["Ωᵉ"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
+prescribe!(elements["Ωᵉ"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
+he,l2 = ops[5](elements["Ωᵉ"])

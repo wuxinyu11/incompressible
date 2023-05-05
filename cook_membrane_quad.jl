@@ -147,7 +147,7 @@ for (n,p) in enumerate(P)
         # err_Δf = Δfnorm/fnorm
 
         # @printf "iter = %i, err_Δf = %e, err_Δd = %e \n" iter err_Δf err_Δd
-        # @printf "iter = %i, err_Δd = %e \n" iter err_Δd
+        @printf "iter = %i, err_Δd = %e \n" iter err_Δd
     end
 end 
 u₁=d₁[3]
