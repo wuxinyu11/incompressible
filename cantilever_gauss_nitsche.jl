@@ -6,12 +6,17 @@
 # elements, nodes = importmsh("./msh/cantilever_"*string(ndiv)*".msh",config)
 
 using  ApproxOperator, LinearAlgebra, Printf
-ndiv = 10
+
+for n in 2:5 
+println(n-1)
+    ndiv = 2^n
+# ndiv = 4
+
 include("input.jl")
 elements, nodes = import_gauss_quadratic("./msh/cantilever_"*string(ndiv)*".msh",:TriGI3)
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
-s = 3.1*12.0/ndiv*ones(nₚ)
+s = 2.5*12.0/ndiv*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 # set∇₂𝝭!(elements["Ω"])
@@ -75,7 +80,7 @@ ops = [
        Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
        Operator{:∫vᵢtᵢds}(),
        Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-       Operator{:∫vᵢgᵢds}(:α=>1e7*E),
+       Operator{:∫vᵢgᵢds}(:α=>1e4*E),
        Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 
@@ -132,7 +137,13 @@ d₂ = zeros(nₚ)
         prescribe!(elements["Ω"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
         prescribe!(elements["Ω"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
         # h1,l2 = ops[4](elements["Ω̄"])
-        he,l2 = ops[5](elements["Ω"])
+        h1,l2 = ops[5](elements["Ω"])
+        
+        # h1 = log10(h1)
+        # L2 = log10(l2)
+        println(h1)
+        println(l2)
+# end       
 # d = k\f
 
 # d₁ = d[1:2:2*nₚ]
@@ -168,4 +179,4 @@ d₂ = zeros(nₚ)
 #     #  𝐻₁[row] = log10(h1)
 # #     𝐻₂[row] = log10(h2)
 # #     𝐻₃[row] = log10(h3)
-# end
+end

@@ -26,12 +26,16 @@ using YAML,ApproxOperator,Plots, LinearAlgebra
 # cantilever:
 #   linewidth: 4->2, 8->1.5, 16->1, 32->0.5
 #   markersize: 4->5, 8->4, 16->3, 32->1
+# xlims_ = (-0.5,48.5)
+# ylims_ = (-6.5,6.5)
+#  cook:
+#   linewidth: 4->2, 8->1.5, 16->1,  20->0.6  32->0.5
+#   markersize: 4->5, 8->4, 16->3, 20->2 32->1
+xlims_ = (0,48.0)
+ylims_ = (0,60.0)
 
-xlims_ = (-0.5,48.5)
-ylims_ = (-6.5,6.5)
-
-linestyle = (:solid,1.5)
-markstyle = (:circle,4,Plots.stroke(0, :black))
+linestyle = (:solid,2)
+markstyle = (:circle,5,Plots.stroke(0, :black))
 
 function plotmesh(as::Vector{T}) where T<:ApproxOperator.AbstractElement
     p = plot(;framestyle=:none,legend = false,background_color=:transparent,aspect_ratio=:equal)
@@ -61,12 +65,10 @@ end
 # config = YAML.load_file("./yml/cantilever_gauss_nitsche_quadratic.yml")
 # elements, nodes = ApproxOperator.importmsh("./msh/cantilever_10.msh",config)
 
-elements, nodes = import_tri3("./msh/cantilever_8.msh")
 
-# nₚ = length(nodes)
-# nₑ = length(elements["Ω"])
-# s = 3*12.0/ndiv*ones(nₚ)
-# push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
+include("input.jl")
+# elements, nodes = import_tri3("./msh/cook_membrance_20.msh")
+elements, nodes = import_tri3("./msh/cantilever_4.msh")
 
 # elements, nodes = ApproxOperator.importmsh("./msh/beam_10.msh")
 # include("input.jl")
@@ -86,6 +88,6 @@ p = plotmesh(elements["Ω"])
 
 # elements, nodes = importmsh("./msh/plate_with_hole_24.msh")
 # p = plotmesh(elements["Ω"])
-# savefig(p,"./figure/plate_with_hole_24.svg")
-
+# savefig(p,"./figure/cook_membrance_20.svg")
+savefig(p,"./figure/cantilever_4.svg")
 plot(p)

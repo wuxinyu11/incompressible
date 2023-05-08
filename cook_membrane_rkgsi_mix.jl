@@ -1,22 +1,24 @@
 
-using  Revise,ApproxOperator, LinearAlgebra, Printf
+using ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-fid_𝑢 = "./msh/cook_membrance_10.msh"
-fid_𝑝 = "./msh/cook_membrance_5.msh"
+fid_𝑢 = "./msh/cook_membrance_30.msh"
+fid_𝑝 = "./msh/cook_membrance_12.msh"
 elements, nodes, nodes_𝑝 = import_rkgsi_mix_quadratic(fid_𝑢,fid_𝑝)
 
 κ = 400942
 μ = 80.1938
 E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
+# E = 70.0
+#  ν = 0.3333
 
 nₚ = length(nodes)
 n𝑝 = length(nodes_𝑝)
 nₑ = length(elements["Ω"])
-s = 2.5*44/10*ones(nₚ)
+s = 2.5*44/30*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
-s = 2.5*44/5*ones(nₚ)
+s = 2.5*44/12*ones(nₚ)
 push!(nodes_𝑝,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set𝝭!(elements["Ω"])
@@ -36,18 +38,18 @@ prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
 ops = [
-    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫vᵢuᵢds}(:α=>1e15*E),
 ]
 opsᵛ = [
-    Operator{:Δ∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵛᵢⱼSᵛᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
 ]
 opsᵈ = [
-    Operator{:Δ∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵈᵢⱼSᵈᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
 ]
 
 k = zeros(2*nₚ,2*nₚ)
@@ -67,7 +69,7 @@ d₂ = zeros(nₚ)
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-nmax = 100
+nmax = 5
 P = 0:6.25/nmax:6.25
 tolerance=1.0e-10;maxiters=1000;
 for (n,p) in enumerate(P)

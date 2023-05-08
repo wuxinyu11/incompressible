@@ -7,6 +7,8 @@ elements, nodes = import_quad("./msh/cook_membrance_quad_10.msh")
 μ = 80.1938
 E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
+# E = 70.0
+#  ν = 0.3333
 
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
@@ -57,7 +59,7 @@ d₂ = zeros(nₚ)
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-nmax = 100
+nmax = 1
 P = 0:6.25/nmax:6.25
 tolerance=1.0e-10;maxiters=1000;
 for (n,p) in enumerate(P)

@@ -1,16 +1,18 @@
 
-using Revise, ApproxOperator, LinearAlgebra, Printf
+using  ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
-elements, nodes = import_gauss_quadratic("./msh/cook_membrance_10.msh",:TriGI3)
+elements, nodes = import_gauss_quadratic("./msh/cook_membrance_5.msh",:TriGI3)
 
 κ = 400942
 μ = 80.1938
 E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
+# E = 70.0
+# ν = 0.3333
 
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
-s = 2.5*44/10*ones(nₚ)
+s = 2.5*44/5*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set𝝭!(elements["Ω"])
@@ -26,8 +28,8 @@ prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
 ops = [
-    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean2}(:E=>E,:ν=>ν),
+    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫vᵢuᵢds}(:α=>1e15*E),
 ]
@@ -45,7 +47,7 @@ d₂ = zeros(nₚ)
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-nmax = 100
+nmax = 1
 P = 0:6.25/nmax:6.25
 tolerance=1.0e-10;maxiters=1000;
 for (n,p) in enumerate(P)
