@@ -436,7 +436,9 @@ function import_gauss_quadratic(filename::String,s::Symbol)
     elements = Dict([
         "Ω"=>ReproducingKernel{parameters...,:Tri3}[],
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
-        "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[]
+        "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
+        "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᶜ"=>ReproducingKernel{parameters...,:Tri3}[],
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
@@ -640,6 +642,58 @@ function import_gauss_quadratic(filename::String,s::Symbol)
         elements["Γᵍ"][C].n₂ = n₂
     end
 
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    ng = 1
+    ns = 0
+    nₑ = length(nodes)
+
+    for (C,p) in enumerate(nodes)
+        indices = Set{Int}()
+        for i in 1:ng
+            x = p.x
+            y = p.y
+            z = p.z
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g,ng,𝓖))
+        push!(elements["Ωᶜ"],element)
+        c += nc
+        g += ng
+        ns += ng*nc
+    end
+       
+    G = 0
+    s = 0
+    data_𝓖 = Dict([
+        :x=>(2,zeros(nₚ)),
+        :y=>(2,zeros(nₚ)),
+        :z=>(2,zeros(nₚ)),
+        :𝑤=>(2,zeros(nₚ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+        :𝝭=>(4,zeros(ns)),
+        :∂𝝭∂x=>(4,zeros(ns)),
+        :∂𝝭∂y=>(4,zeros(ns))
+    ])
+    for (C,p) in enumerate(nodes)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            x.x = p.x
+            x.y = p.y
+            x.z = p.z
+            push!(𝓖,x)
+            s += getfield(elements["Ωᶜ"][C],:𝓒)[2]
+        end
+    end
 
     return elements,nodes
 end
@@ -674,6 +728,7 @@ function import_rkgsi(filename::String)
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᶜ"=>ReproducingKernel{parameters...,:Tri3}[],
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
@@ -999,8 +1054,60 @@ function import_rkgsi(filename::String)
         elements["Γᵍ"][C].n₂ = n₂
     end
 
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    ng = 1
+    ns = 0
+    nₑ = length(nodes)
 
-    return elements,nodes
+    for (C,p) in enumerate(nodes)
+        indices = Set{Int}()
+        for i in 1:ng
+            x = p.x
+            y = p.y
+            z = p.z
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g,ng,𝓖))
+        push!(elements["Ωᶜ"],element)
+        c += nc
+        g += ng
+        ns += ng*nc
+    end
+       
+    G = 0
+    s = 0
+    data_𝓖 = Dict([
+        :x=>(2,zeros(nₚ)),
+        :y=>(2,zeros(nₚ)),
+        :z=>(2,zeros(nₚ)),
+        :𝑤=>(2,zeros(nₚ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+        :𝝭=>(4,zeros(ns)),
+        :∂𝝭∂x=>(4,zeros(ns)),
+        :∂𝝭∂y=>(4,zeros(ns))
+    ])
+    for (C,p) in enumerate(nodes)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            x.x = p.x
+            x.y = p.y
+            x.z = p.z
+            push!(𝓖,x)
+            s += getfield(elements["Ωᶜ"][C],:𝓒)[2]
+        end
+    end
+
+    return elements,nodes,elms
 end
     
 function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
@@ -1052,6 +1159,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         "Γᵗ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Γᵍ"=>ReproducingKernel{parameters...,:Seg2}[],
         "Ωᵉ"=>ReproducingKernel{parameters...,:Tri3}[],
+        "Ωᶜ"=>ReproducingKernel{parameters...,:Tri3}[],
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
@@ -1084,6 +1192,7 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
     for (C,a) in enumerate(elms["Ω"])
         indices = Set{Int}()
         indices_𝑝 = Set{Int}()
+        indices_c = Set{Int}()
         for i in 1:ng_Ω
             ξ = scheme_Ω[:ξ][i]
             η = scheme_Ω[:η][i]
@@ -1489,8 +1598,60 @@ function import_rkgsi_mix_quadratic(filename1::String,filename2::String)
         elements["Γᵍ"][C].n₂ = n₂
     end
 
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    ng = 1
+    ns = 0
+    nₑ = length(nodes)
 
-    return elements,nodes,nodes_𝑝
+    for (C,p) in enumerate(nodes)
+        indices = Set{Int}()
+        for i in 1:ng
+            x = p.x
+            y = p.y
+            z = p.z
+            union!(indices,sp(x,y,z))
+        end
+        nc = length(indices)
+        for i in indices
+            push!(𝓒,nodes[i])
+        end
+        element = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g,ng,𝓖))
+        push!(elements["Ωᶜ"],element)
+        c += nc
+        g += ng
+        ns += ng*nc
+    end
+       
+    G = 0
+    s = 0
+    data_𝓖 = Dict([
+        :x=>(2,zeros(nₚ)),
+        :y=>(2,zeros(nₚ)),
+        :z=>(2,zeros(nₚ)),
+        :𝑤=>(2,zeros(nₚ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+        :𝝭=>(4,zeros(ns)),
+        :∂𝝭∂x=>(4,zeros(ns)),
+        :∂𝝭∂y=>(4,zeros(ns))
+    ])
+    for (C,p) in enumerate(nodes)
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            x.x = p.x
+            x.y = p.y
+            x.z = p.z
+            push!(𝓖,x)
+            s += getfield(elements["Ωᶜ"][C],:𝓒)[2]
+        end
+    end
+
+    return elements,nodes,nodes_𝑝,elms
 end
     
 function import_rkgsi_fem(fid1::String,fid2::String)
