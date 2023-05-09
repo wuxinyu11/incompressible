@@ -431,6 +431,7 @@ function import_gauss_quadratic(filename::String,s::Symbol)
 
     parameters = (:Quadratic2D,:□,:CubicSpline)
     scheme = ApproxOperator.quadraturerule(s)
+    scheme_Ωᵉ = ApproxOperator.quadraturerule(:TriGI13)
     n𝒑 = 21
 
     elements = Dict([
@@ -442,11 +443,17 @@ function import_gauss_quadratic(filename::String,s::Symbol)
     ])
 
     𝓒 = Node{(:𝐼,),1}[]
+    𝓒_Ωᵉ = Node{(:𝐼,),1}[]
     𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    𝓖_Ωᵉ = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
     c = 0
+    c_Ωᵉ = 0
     g = 0
+    g_Ωᵉ = 0
     ng = length(scheme[:w])
+    ng_Ωᵉ = 13
     ns = 0
+    ns_Ωᵉ = 0
     nₑ = length(elms["Ω"])
 
     for (C,a) in enumerate(elms["Ω"])
@@ -461,12 +468,28 @@ function import_gauss_quadratic(filename::String,s::Symbol)
         for i in indices
             push!(𝓒,nodes[i])
         end
+        indices = Set{Int}()
+        for i in 1:ng_Ωᵉ
+            ξ = scheme_Ωᵉ[:ξ][i]
+            η = scheme_Ωᵉ[:η][i]
+            x,y,z = a(ξ,η)
+            union!(indices,sp(x,y,z))
+        end
+        nc_Ωᵉ = length(indices)
+        for i in indices
+            push!(𝓒_Ωᵉ,nodes[i])
+        end
         element = ReproducingKernel{parameters...,:Tri3}((c,nc,𝓒),(g,ng,𝓖))
+        element_Ωᵉ = ReproducingKernel{parameters...,:Tri3}((c_Ωᵉ,nc_Ωᵉ,𝓒_Ωᵉ),(g_Ωᵉ,ng_Ωᵉ,𝓖_Ωᵉ))
         push!(elements["Ω"],element)
+        push!(elements["Ωᵉ"],element_Ωᵉ)
 
         c += nc
         g += ng
         ns += nc*ng
+        c_Ωᵉ += nc_Ωᵉ
+        g_Ωᵉ += ng_Ωᵉ
+        ns_Ωᵉ += nc_Ωᵉ*ng_Ωᵉ
     end
 
     data = Dict([
@@ -484,9 +507,26 @@ function import_gauss_quadratic(filename::String,s::Symbol)
         :∂𝗠∂x=>(0,zeros(n𝒑)),
         :∂𝗠∂y=>(0,zeros(n𝒑)),
     ])
+    data_Ωᵉ = Dict([
+        :ξ=>(1,scheme_Ωᵉ[:ξ]),
+        :η=>(1,scheme_Ωᵉ[:η]),
+        :w=>(1,scheme_Ωᵉ[:w]),
+        :x=>(2,zeros(g_Ωᵉ)),
+        :y=>(2,zeros(g_Ωᵉ)),
+        :z=>(2,zeros(g_Ωᵉ)),
+        :𝑤=>(2,zeros(g_Ωᵉ)),
+        :𝝭=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂x=>(4,zeros(ns_Ωᵉ)),
+        :∂𝝭∂y=>(4,zeros(ns_Ωᵉ)),
+        :𝗠=>(0,zeros(n𝒑)),
+        :∂𝗠∂x=>(0,zeros(n𝒑)),
+        :∂𝗠∂y=>(0,zeros(n𝒑)),
+    ])
     
     G = 0
     s = 0
+    G_Ωᵉ = 0
+    s_Ωᵉ = 0
     for (C,a) in enumerate(elms["Ω"])
         𝐴 = ApproxOperator.get𝐴(a)
         for i in 1:ng
@@ -501,6 +541,19 @@ function import_gauss_quadratic(filename::String,s::Symbol)
             x.𝑤 = 𝐴*x.w
             push!(𝓖,x)
             s += getfield(elements["Ω"][C],:𝓒)[2]
+        end
+        for i in 1:ng_Ωᵉ
+            G_Ωᵉ += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G_Ωᵉ,C,s_Ωᵉ),data_Ωᵉ)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = 𝐴*x.w
+            push!(𝓖_Ωᵉ,x)
+            s_Ωᵉ += getfield(elements["Ωᵉ"][C],:𝓒)[2]
         end
     end
     
