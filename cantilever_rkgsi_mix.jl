@@ -2,8 +2,8 @@
 using  ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-ndiv_𝑢 = 10
-ndiv_𝑝 = 6
+ndiv_𝑢 = 8
+ndiv_𝑝 = 8
 
 fid_𝑢 = "./msh/cantilever_"*string(ndiv_𝑢)*".msh"
 fid_𝑝 = "./msh/cantilever_"*string(ndiv_𝑝)*".msh"
@@ -31,8 +31,8 @@ set∇𝝭!(elements["Ωᵉ"])
 
 P = 1000
 Ē = 3e6
-ν̄ = 0.4999999
-# ν̄ = 0.3
+# ν̄ = 0.4999999
+ν̄ = 0.3
 E = Ē/(1.0-ν̄^2)
 ν = ν̄/(1.0-ν̄)
 L = 48
@@ -54,7 +54,7 @@ ops = [
     Operator{:∫∫εᵈᵢⱼσᵈᵢⱼdxdy}(:E=>Ē,:ν=>ν̄),
     Operator{:∫vᵢtᵢds}(),
     Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-    Operator{:∫vᵢgᵢds}(:α=>1e7*E),
+    Operator{:∫vᵢgᵢds}(:α=>1e3*E),
     Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 
@@ -68,7 +68,7 @@ ops[1](elements["Ω̃"],k)
 ops[2](elements["Ω̄"],kᵛ)
 ops[3](elements["Ω̃"],kᵈ)
 ops[4](elements["Γᵗ"],f)
-# ops[5](elements["Γᵍ"],kα,f)
+ops[5](elements["Γᵍ"],kα,f)
 ops[6](elements["Γᵍ"],kα,f)
 
 # d = (k+kα)\f
