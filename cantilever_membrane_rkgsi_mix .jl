@@ -1,30 +1,43 @@
 
-using  ApproxOperator, LinearAlgebra, Printf
-ndiv=15
+using ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
-elements, nodes ,elms= import_gauss_quadratic("./msh/cook_membrance_"*string(ndiv)*".msh",:TriGI3)
+
+ndiv_𝑢 = 15
+ndiv_𝑝 = 5
+fid_𝑢 = "./msh/cantilever_"*string(ndiv_𝑢)*".msh"
+fid_𝑝 = "./msh/cantilever_"*string(ndiv_𝑝)*".msh"
+elements, nodes, nodes_𝑝,elms = import_rkgsi_mix_quadratic(fid_𝑢,fid_𝑝)
 
 κ = 400942
 μ = 80.1938
 E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
 # E = 70.0
-# ν = 0.3333
+#  ν = 0.3333
 Cᵢᵢᵢᵢ = E*(1-ν)/(1+ν)/(1-2*ν)
 Cᵢᵢⱼⱼ = E*ν/(1+ν)/(1-2*ν)
 Cᵢⱼᵢⱼ = E/(1+ν)/2
 
 nₚ = length(nodes)
+n𝑝 = length(nodes_𝑝)
 nₑ = length(elements["Ω"])
-s = 2.5*44/ndiv*ones(nₚ)
+s = 2.5*44/ndiv_𝑢*ones(nₚ)
 push!(nodes,:s₁=>s,:s₂=>s,:s₃=>s)
+s = 2.5*44/ndiv_𝑝*ones(nₚ)
+push!(nodes_𝑝,:s₁=>s,:s₂=>s,:s₃=>s)
 
 set𝝭!(elements["Ω"])
-set∇𝝭!(elements["Ω"])
+set∇𝝭!(elements["Ω̃"])
+set𝝭!(elements["Ωˢᵖ"])
+set𝝭!(elements["Ωᵖ"])
+set𝝭!(elements["Ω̃ᵖ"])
+set∇𝝭!(elements["Ω̄"])
 set𝝭!(elements["Γᵗ"])
-set𝝭!(elements["Γᵍ"])
+set∇𝝭!(elements["Γᵍ"])
+set∇𝝭!(elements["Ωᶜ"])
 
 prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.0)
+prescribe!(elements["Γᵗ"],:t₂=>(x,y,z)->P/2/I*(D^2/4-y^2))
 prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:g₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₁₁=>(x,y,z)->1.0)
@@ -32,17 +45,28 @@ prescribe!(elements["Γᵍ"],:n₁₂=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 
 ops = [
-    Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
-    Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
+    Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
-    Operator{:∫vᵢuᵢds}(:α=>1e15*E),
+    Operator{:∫vᵢuᵢds}(:α=>1e7*E),
+]
+opsᵛ = [
+    Operator{:∫∫εᵛᵢⱼσᵛᵢⱼdxdy}(:E=>E,:ν=>ν)
+   
+]
+opsᵈ = [
+    Operator{:∫∫εᵈᵢⱼσᵈᵢⱼdxdy}(:E=>E,:ν=>ν)
+   
 ]
 
 k = zeros(2*nₚ,2*nₚ)
+kᵛ = zeros(2*nₚ,2*nₚ)
+kᵈ = zeros(2*nₚ,2*nₚ)
 kα = zeros(2*nₚ,2*nₚ)
 f = zeros(2*nₚ)
 fα = zeros(2*nₚ)
 fint = zeros(2*nₚ)
+fintᵛ = zeros(2*nₚ)
+fintᵈ = zeros(2*nₚ)
 fext = zeros(2*nₚ)
 d = zeros(2*nₚ)
 Δd= zeros(2*nₚ)
@@ -51,90 +75,40 @@ d₂ = zeros(nₚ)
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-nmax = 20
-P = 0:6.25/nmax:6.25
-tolerance=1.0e-10;maxiters=1000;
-for (n,p) in enumerate(P)
-    if n == 1
-        continue
-    end
-    err_Δd = 1.0
-    dnorm = 0.0
-    # err_Δf = 1.0
-    # fnorm = 0.0
-    @printf "Load step=%i,p=%e \n" n p
-    fill!(fext,0.0)
-    prescribe!(elements["Γᵗ"],:t₂=>(x,y,z)->p)
-    ops[3](elements["Γᵗ"],fext)
-    # fill!(k,0.0)
-    # fill!(kα,0.0)
-    # fill!(fα,0.0)
-    # ops[1](elements["Ω"],k)
-    # ops[4](elements["Γᵍ"],kα,fα)
-    # k⁻¹ .= inv(k+kα)
-    iter = 0
-    while err_Δd>tolerance && iter<maxiters
-        iter += 1
-        fill!(fint,0.0)
-        ops[2](elements["Ω"],fint)
-        f .= fext-fint
 
-        fill!(k,0.0)
         fill!(kα,0.0)
         fill!(fα,0.0)
-        ops[1](elements["Ω"],k)
-        ops[4](elements["Γᵍ"],kα,fα)
+        ops[3](elements["Γᵍ"],kα,fα)
 
-        # if iter == 1
-        #     Δd .= k⁻¹*(f+fα)
-        # else
-        #     Δd .= k⁻¹*f
-        # end
+        # fill!(k,0.0)
+        # fill!(fint,0.0)
+        # ops[1](elements["Ω̃"],k)
+        # ops[2](elements["Ω̃"],fint)
 
-        Δd .= (k+kα)\(f+fα)
+        fill!(kᵛ,0.0)
+        fill!(fintᵛ,0.0)
+        opsᵛ[1](elements["Ω̄"],kᵛ)
+        
+        # opsᵛ[1](elements["Ω"],kᵛ)
+        # opsᵛ[2](elements["Ω"],fintᵛ)
 
-        # fnorm = norm(f)
-        # fᵗnorm = fnorm+1.0
-        # fᵗ .= f
-        # λ = 2.0
-        # while fᵗnorm ≥ fnorm && λ > tolerance
-        #     # println(λ)
-        #     fill!(fint,0.0)
-        #     λ *= 0.5
-        #     d₁ .= d[1:2:2*nₚ]+λ*Δd[1:2:2*nₚ]
-        #     d₂ .= d[2:2:2*nₚ]+λ*Δd[2:2:2*nₚ]
-        #     ops[2](elements["Ω"],fint)
-        #     fᵗ = fext-fint
-        #     fᵗnorm = norm(fᵗ)
-        #     # println(fnorm)
-        #     # println(fᵗnorm)
-        # end
-        # d .+= λ*Δd 
+        fill!(kᵈ,0.0)
+        fill!(fintᵈ,0.0)
+        opsᵈ[1](elements["Ω̃"],kᵈ)
+       
 
-        d .+= Δd 
+       
+
+        
+        f .= fext-fintᵛ-fintᵈ
+        d = (kᵛ+kᵈ+kα)\(f+fα)
+
         d₁ .= d[1:2:2*nₚ]
         d₂ .= d[2:2:2*nₚ]
 
-        Δdnorm = LinearAlgebra.norm(Δd)
-        # Δdnorm = LinearAlgebra.norm(λ*Δd)
-        dnorm += Δdnorm
-        err_Δd = Δdnorm/dnorm
-        # err_Δd = Δdnorm
-        # Δfnorm = LinearAlgebra.norm(f+fα)
-        # fnorm += Δfnorm
-        # err_Δf = Δfnorm/fnorm
 
-        # @printf "iter = %i, err_Δf = %e, err_Δd = %e \n" iter err_Δf err_Δd
-        @printf "iter = %i, err_Δd = %e \n" iter err_Δd
-    end
-end 
-
-u=d₂[3]
-println(u)
-
-# # fo = open("./vtk/cook_membrance_rkgsi_mix_"*string(ndiv_𝑢)*".vtk","w")
+# fo = open("./vtk/cook_membrance_rkgsi_mix_"*string(ndiv_𝑢)*".vtk","w")
 # # fo = open("./vtk/cook_membrance_rkgsi_"*string(ndiv_𝑢)*".vtk","w")
-# fo = open("./vtk/cook_membrance_guass3_"*string(ndiv)*".vtk","w")
 # @printf fo "# vtk DataFile Version 2.0\n"
 # @printf fo "cook_membrance_rkgsi_mix\n"
 # @printf fo "ASCII\n"
@@ -150,7 +124,7 @@ println(u)
 # end
 # @printf fo "POINT_DATA %i\n" nₚ
 # @printf fo "VECTORS U float\n"
-# for p in elements["Ω"]
+# for p in elements["Ωᶜ"]
 #     ξ = collect(p.𝓖)[1]
 #     N = ξ[:𝝭]
 #     u₁ = 0.0
@@ -163,7 +137,7 @@ println(u)
 # end
 
 # @printf fo "TENSORS STRESS float\n"
-# for p in elements["Ω"]
+# for p in elements["Ωᶜ"]
 #     𝓒 = p.𝓒
 #     𝓖 = p.𝓖
 #     ε₁₁ = 0.0
@@ -187,3 +161,12 @@ println(u)
 #     @printf fo "%f %f %f\n" 0.0 0.0 0.0
 # end
 # close(fo)
+
+# a = elements["Ω"][end]
+# ξs = collect(a.𝓖)
+# 𝝭 = ξs[3][:𝝭]
+# u₂ = 0.0
+# for (i,x) in enumerate(a.𝓒)
+#     global u₂ += 𝝭[i]*x.d₂
+# end
+# println(u₂)

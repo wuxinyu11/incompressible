@@ -1,9 +1,9 @@
 
-using Revise, ApproxOperator, LinearAlgebra, Printf
+using  ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-ndiv_𝑢 = 8
-ndiv_𝑝 = 8
+ndiv_𝑢 = 10
+ndiv_𝑝 = 6
 
 fid_𝑢 = "./msh/cantilever_"*string(ndiv_𝑢)*".msh"
 fid_𝑝 = "./msh/cantilever_"*string(ndiv_𝑝)*".msh"

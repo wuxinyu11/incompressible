@@ -2,7 +2,7 @@
 a = 48.0;
 b = 44.0;
 c = 16.0;
-n = 2;
+n =40;
 
 
 Point(1) = {0.0, 0.0, 0.0};
@@ -19,7 +19,7 @@ Curve Loop(5) = {1,2,3,4};
 
 Plane Surface(1) = {5};
 
-Transfinite Curve{-1,3} = 2*n+1 Using Progression 1.05;
+Transfinite Curve{-1,3} = 2*n+1 Using Progression 1.00;
 Transfinite Curve{2,4} = n+1;
 
 Physical Curve("Γᵗ") = {2};

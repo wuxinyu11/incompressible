@@ -695,7 +695,7 @@ function import_gauss_quadratic(filename::String,s::Symbol)
         end
     end
 
-    return elements,nodes
+    return elements,nodes,elms
 end
 
 function import_rkgsi(filename::String)
