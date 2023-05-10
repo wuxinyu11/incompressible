@@ -8,7 +8,7 @@
 # config = TOML.parsefile("./toml/cantilever_2D_rkgsi_nitsche_cubic.toml")
 # elements,nodes = importmsh(file_nodes,config)
 using  ApproxOperator, LinearAlgebra, Printf
-ndiv = 32
+ndiv = 16
 include("input.jl")
 elements, nodes = import_rkgsi("./msh/cantilever_"*string(ndiv)*".msh")
 nₚ = length(nodes)
@@ -64,7 +64,7 @@ ops = [
        Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
        Operator{:∫vᵢtᵢds}(),
        Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-       Operator{:∫vᵢgᵢds}(:α=>1e4*E),
+       Operator{:∫vᵢgᵢds}(:α=>1e3*E),
        Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 k = zeros(2*nₚ,2*nₚ)

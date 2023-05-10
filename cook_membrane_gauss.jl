@@ -1,6 +1,6 @@
 
 using  ApproxOperator, LinearAlgebra, Printf
-ndiv=15
+ndiv=5
 include("input.jl")
 elements, nodes ,elms= import_gauss_quadratic("./msh/cook_membrance_"*string(ndiv)*".msh",:TriGI3)
 
@@ -132,58 +132,59 @@ end
 u=d₂[3]
 println(u)
 
-# # fo = open("./vtk/cook_membrance_rkgsi_mix_"*string(ndiv_𝑢)*".vtk","w")
-# # fo = open("./vtk/cook_membrance_rkgsi_"*string(ndiv_𝑢)*".vtk","w")
-# fo = open("./vtk/cook_membrance_guass3_"*string(ndiv)*".vtk","w")
-# @printf fo "# vtk DataFile Version 2.0\n"
+# fo = open("./vtk/cook_membrance_rkgsi_mix_"*string(ndiv_𝑢)*".vtk","w")
+# fo = open("./vtk/cook_membrance_rkgsi_"*string(ndiv_𝑢)*".vtk","w")
+fo = open("./vtk/cook_membrance_guass3_"*string(ndiv)*".vtk","w")
+@printf fo "# vtk DataFile Version 2.0\n"
 # @printf fo "cook_membrance_rkgsi_mix\n"
-# @printf fo "ASCII\n"
-# @printf fo "DATASET POLYDATA\n"
-# @printf fo "POINTS %i float\n" nₚ
-# for p in nodes
-#     @printf fo "%f %f %f\n" p.x p.y p.z
-# end
-# @printf fo "POLYGONS %i %i\n" nₑ 4*nₑ
-# for ap in elms["Ω"]
-#     𝓒 = ap.vertices
-#     @printf fo "%i %i %i %i\n" 3 (x.i-1 for x in 𝓒)...
-# end
-# @printf fo "POINT_DATA %i\n" nₚ
-# @printf fo "VECTORS U float\n"
-# for p in elements["Ω"]
-#     ξ = collect(p.𝓖)[1]
-#     N = ξ[:𝝭]
-#     u₁ = 0.0
-#     u₂ = 0.0
-#     for (i,x) in enumerate(p.𝓒)
-#         u₁ += N[i]*x.d₁
-#         u₂ += N[i]*x.d₂
-#     end
-#     @printf fo "%f %f %f\n" u₁ u₂ 0.0
-# end
+@printf fo "cook_membrance_guass3\n"
+@printf fo "ASCII\n"
+@printf fo "DATASET POLYDATA\n"
+@printf fo "POINTS %i float\n" nₚ
+for p in nodes
+    @printf fo "%f %f %f\n" p.x p.y p.z
+end
+@printf fo "POLYGONS %i %i\n" nₑ 4*nₑ
+for ap in elms["Ω"]
+    𝓒 = ap.vertices
+    @printf fo "%i %i %i %i\n" 3 (x.i-1 for x in 𝓒)...
+end
+@printf fo "POINT_DATA %i\n" nₚ
+@printf fo "VECTORS U float\n"
+for p in elements["Ω"]
+    ξ = collect(p.𝓖)[1]
+    N = ξ[:𝝭]
+    u₁ = 0.0
+    u₂ = 0.0
+    for (i,x) in enumerate(p.𝓒)
+        u₁ += N[i]*x.d₁
+        u₂ += N[i]*x.d₂
+    end
+    @printf fo "%f %f %f\n" u₁ u₂ 0.0
+end
 
-# @printf fo "TENSORS STRESS float\n"
-# for p in elements["Ω"]
-#     𝓒 = p.𝓒
-#     𝓖 = p.𝓖
-#     ε₁₁ = 0.0
-#     ε₂₂ = 0.0
-#     ε₁₂ = 0.0
+@printf fo "TENSORS STRESS float\n"
+for p in elements["Ω"]
+    𝓒 = p.𝓒
+    𝓖 = p.𝓖
+    ε₁₁ = 0.0
+    ε₂₂ = 0.0
+    ε₁₂ = 0.0
 
-#     for (i,ξ) in enumerate(𝓖)
-#         B₁ = ξ[:∂𝝭∂x]
-#         B₂ = ξ[:∂𝝭∂y]
-#         for (j,xⱼ) in enumerate(𝓒)
-#             ε₁₁ += B₁[j]*xⱼ.d₁
-#             ε₂₂ += B₂[j]*xⱼ.d₂
-#             ε₁₂ += B₁[j]*xⱼ.d₂ + B₂[j]*xⱼ.d₁
-#         end
-#     end
-#     σ₁₁ = Cᵢᵢᵢᵢ*ε₁₁+Cᵢᵢⱼⱼ*ε₂₂
-#     σ₂₂ = Cᵢᵢⱼⱼ*ε₁₁+Cᵢᵢᵢᵢ*ε₂₂
-#     σ₁₂ = Cᵢⱼᵢⱼ*ε₁₂
-#     @printf fo "%f %f %f\n" σ₁₁ σ₁₂ 0.0
-#     @printf fo "%f %f %f\n" σ₁₂ σ₂₂ 0.0
-#     @printf fo "%f %f %f\n" 0.0 0.0 0.0
-# end
-# close(fo)
+    for (i,ξ) in enumerate(𝓖)
+        B₁ = ξ[:∂𝝭∂x]
+        B₂ = ξ[:∂𝝭∂y]
+        for (j,xⱼ) in enumerate(𝓒)
+            ε₁₁ += B₁[j]*xⱼ.d₁
+            ε₂₂ += B₂[j]*xⱼ.d₂
+            ε₁₂ += B₁[j]*xⱼ.d₂ + B₂[j]*xⱼ.d₁
+        end
+    end
+    σ₁₁ = Cᵢᵢᵢᵢ*ε₁₁+Cᵢᵢⱼⱼ*ε₂₂
+    σ₂₂ = Cᵢᵢⱼⱼ*ε₁₁+Cᵢᵢᵢᵢ*ε₂₂
+    σ₁₂ = Cᵢⱼᵢⱼ*ε₁₂
+    @printf fo "%f %f %f\n" σ₁₁ σ₁₂ 0.0
+    @printf fo "%f %f %f\n" σ₁₂ σ₂₂ 0.0
+    @printf fo "%f %f %f\n" 0.0 0.0 0.0
+end
+close(fo)

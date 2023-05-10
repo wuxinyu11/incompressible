@@ -2,9 +2,8 @@
 using  ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-ndiv_𝑢 = 8
-ndiv_𝑝 = 8
-
+ndiv_𝑢 = 20
+ndiv_𝑝 =16
 fid_𝑢 = "./msh/cantilever_"*string(ndiv_𝑢)*".msh"
 fid_𝑝 = "./msh/cantilever_"*string(ndiv_𝑝)*".msh"
 
@@ -31,8 +30,8 @@ set∇𝝭!(elements["Ωᵉ"])
 
 P = 1000
 Ē = 3e6
-# ν̄ = 0.4999999
-ν̄ = 0.3
+ν̄ = 0.4999999
+# ν̄ = 0.3
 E = Ē/(1.0-ν̄^2)
 ν = ν̄/(1.0-ν̄)
 L = 48
@@ -53,7 +52,7 @@ ops = [
     Operator{:∫∫εᵛᵢⱼσᵛᵢⱼdxdy}(:E=>Ē,:ν=>ν̄),
     Operator{:∫∫εᵈᵢⱼσᵈᵢⱼdxdy}(:E=>Ē,:ν=>ν̄),
     Operator{:∫vᵢtᵢds}(),
-    Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
+    # Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
     Operator{:∫vᵢgᵢds}(:α=>1e3*E),
     Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
@@ -69,7 +68,7 @@ ops[2](elements["Ω̄"],kᵛ)
 ops[3](elements["Ω̃"],kᵈ)
 ops[4](elements["Γᵗ"],f)
 ops[5](elements["Γᵍ"],kα,f)
-ops[6](elements["Γᵍ"],kα,f)
+# ops[6](elements["Γᵍ"],kα,f)
 
 # d = (k+kα)\f
 d = (kᵛ+kᵈ+kα)\f
@@ -83,7 +82,8 @@ prescribe!(elements["Ωᵉ"],:∂u∂x=>(x,y,z)->-P/EI*(L-x)*y)
 prescribe!(elements["Ωᵉ"],:∂u∂y=>(x,y,z)->-P/6/EI*((6*L-3*x)*x + (2+ν)*(3*y^2-D^2/4)))
 prescribe!(elements["Ωᵉ"],:∂v∂x=>(x,y,z)->P/6/EI*((6*L-3*x)*x - 3*ν*y^2 + (4+5*ν)*D^2/4))
 prescribe!(elements["Ωᵉ"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
-h1,l2 = ops[7](elements["Ωᵉ"])
+# h1,l2 = ops[7](elements["Ωᵉ"])
+h1,l2 = ops[6](elements["Ωᵉ"])
 # L2 = log10(l2)
 # h1 = log10(h1)
 # h = log10(12.0/ndiv)

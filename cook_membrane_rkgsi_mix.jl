@@ -2,8 +2,8 @@
 using ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
 
-ndiv_𝑢 = 20
-ndiv_𝑝 = 8
+ndiv_𝑢 = 10
+ndiv_𝑝 = 4
 fid_𝑢 = "./msh/cook_membrance_"*string(ndiv_𝑢)*".msh"
 fid_𝑝 = "./msh/cook_membrance_"*string(ndiv_𝑝)*".msh"
 elements, nodes, nodes_𝑝,elms = import_rkgsi_mix_quadratic(fid_𝑢,fid_𝑝)
@@ -108,17 +108,17 @@ for (n,p) in enumerate(P)
         ops[1](elements["Ω̃"],k)
         ops[2](elements["Ω̃"],fint)
 
-        # fill!(kᵛ,0.0)
-        # fill!(fintᵛ,0.0)
-        # opsᵛ[1](elements["Ω̄"],kᵛ)
-        # opsᵛ[2](elements["Ω̄"],fintᵛ)
-        # # opsᵛ[1](elements["Ω"],kᵛ)
-        # # opsᵛ[2](elements["Ω"],fintᵛ)
+        fill!(kᵛ,0.0)
+        fill!(fintᵛ,0.0)
+        opsᵛ[1](elements["Ω̄"],kᵛ)
+        opsᵛ[2](elements["Ω̄"],fintᵛ)
+        # opsᵛ[1](elements["Ω"],kᵛ)
+        # opsᵛ[2](elements["Ω"],fintᵛ)
 
-        # fill!(kᵈ,0.0)
-        # fill!(fintᵈ,0.0)
-        # opsᵈ[1](elements["Ω̃"],kᵈ)
-        # opsᵈ[2](elements["Ω̃"],fintᵈ)
+        fill!(kᵈ,0.0)
+        fill!(fintᵈ,0.0)
+        opsᵈ[1](elements["Ω̃"],kᵈ)
+        opsᵈ[2](elements["Ω̃"],fintᵈ)
 
         # if iter == 1
         #     Δd .= k⁻¹*(f+fα)
@@ -126,11 +126,11 @@ for (n,p) in enumerate(P)
         #     Δd .= k⁻¹*f
         # end
 
-        f .= fext-fint
-        Δd .= (k+kα)\(f+fα)
+        # f .= fext-fint
+        # Δd .= (k+kα)\(f+fα)
 
-        # f .= fext-fintᵛ-fintᵈ
-        # Δd .= (kᵛ+kᵈ+kα)\(f+fα)
+        f .= fext-fintᵛ-fintᵈ
+        Δd .= (kᵛ+kᵈ+kα)\(f+fα)
 
         # fnorm = norm(f)
         # fᵗnorm = fnorm+1.0
