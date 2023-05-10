@@ -23,6 +23,7 @@ set𝝭!(elements["Ω"])
 set∇𝝭!(elements["Ω"])
 set𝝭!(elements["Γᵗ"])
 set𝝭!(elements["Γᵍ"])
+set∇𝝭!(elements["Ωᶜ"])
 
 prescribe!(elements["Γᵗ"],:t₁=>(x,y,z)->0.0)
 prescribe!(elements["Γᵍ"],:g₁=>(x,y,z)->0.0)
@@ -35,7 +36,7 @@ ops = [
     Operator{:Δ∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
     Operator{:∫∫EᵢⱼSᵢⱼdxdy_NeoHookean}(:E=>E,:ν=>ν),
     Operator{:∫vᵢtᵢds}(),
-    Operator{:∫vᵢuᵢds}(:α=>1e15*E),
+    Operator{:∫vᵢuᵢds}(:α=>1e7*E),
 ]
 
 k = zeros(2*nₚ,2*nₚ)
@@ -151,7 +152,7 @@ for ap in elms["Ω"]
 end
 @printf fo "POINT_DATA %i\n" nₚ
 @printf fo "VECTORS U float\n"
-for p in elements["Ω"]
+for p in elements["Ωᶜ"]
     ξ = collect(p.𝓖)[1]
     N = ξ[:𝝭]
     u₁ = 0.0
@@ -164,7 +165,7 @@ for p in elements["Ω"]
 end
 
 @printf fo "TENSORS STRESS float\n"
-for p in elements["Ω"]
+for p in elements["Ωᶜ"]
     𝓒 = p.𝓒
     𝓖 = p.𝓖
     ε₁₁ = 0.0

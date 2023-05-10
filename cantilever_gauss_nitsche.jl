@@ -63,7 +63,7 @@ prescribe!(elements["Γᵍ"],:n₂₂=>(x,y,z)->1.0)
 ops = [
        Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
        Operator{:∫vᵢtᵢds}(),
-       # Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
+    #    Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
        Operator{:∫vᵢgᵢds}(:α=>1e3*E),
        Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
