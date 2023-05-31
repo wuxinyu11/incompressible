@@ -191,6 +191,7 @@ for p in elements["Ω"]
     @printf fo "%f %f %f\n" u₁ u₂ 0.0
 end
 
+@printf fo "CELL_DATA %i\n" nₑ
 @printf fo "TENSORS STRESS float\n"
 for p in elements["Ω"]
     𝓒 = p.𝓒
@@ -208,12 +209,17 @@ for p in elements["Ω"]
             ε₁₂ += B₁[j]*xⱼ.d₂ + B₂[j]*xⱼ.d₁
         end
     end
+    ε₁₁ = ε₁₁/4
+    ε₂₂ = ε₂₂/4
+    ε₁₂ = ε₁₂/4
+
     σ₁₁ = Cᵢᵢᵢᵢ*ε₁₁+Cᵢᵢⱼⱼ*ε₂₂
     σ₂₂ = Cᵢᵢⱼⱼ*ε₁₁+Cᵢᵢᵢᵢ*ε₂₂
     σ₁₂ = Cᵢⱼᵢⱼ*ε₁₂
     @printf fo "%f %f %f\n" σ₁₁ σ₁₂ 0.0
     @printf fo "%f %f %f\n" σ₁₂ σ₂₂ 0.0
     @printf fo "%f %f %f\n" 0.0 0.0 0.0
+    @printf fo "\n"
 end
 close(fo)
 
