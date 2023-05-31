@@ -3,10 +3,10 @@ using  ApproxOperator, LinearAlgebra, Printf
 
 include("input.jl")
 
-for n in 2:5 
-println(n-1)
-    ndiv = 2^n
-#  ndiv = 32
+# for n in 2:5 
+# println(n-1)
+#     ndiv = 2^n
+ ndiv = 32
 
 elements, nodes = import_gauss_quadratic("./msh/cantilever_"*string(ndiv)*".msh",:TriGI13)
 nₚ = length(nodes)
@@ -64,7 +64,7 @@ ops = [
        Operator{:∫∫εᵢⱼσᵢⱼdxdy}(:E=>E,:ν=>ν),
        Operator{:∫vᵢtᵢds}(),
     #    Operator{:∫σᵢⱼnⱼgᵢds}(:E=>E,:ν=>ν),
-       Operator{:∫vᵢgᵢds}(:α=>1e3*E),
+       Operator{:∫vᵢgᵢds}(:α=>1e16*E),
        Operator{:Hₑ_PlaneStress}(:E=>E,:ν=>ν)
 ]
 
@@ -80,11 +80,11 @@ push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
 ops[1](elements["Ω"],k)
 ops[2](elements["Γᵗ"],f)
-ops[3](elements["Γᵍ"],k,f)
-# ops[3](elements["Γᵍ"],kα,fα)
+# ops[3](elements["Γᵍ"],k,f)
+ops[3](elements["Γᵍ"],kα,fα)
 # ops[4](elements["Γᵍ"],k,f)
-d = k\f
-# d = (k+kα)\(f+fα)
+# d = k\f
+d = (k+kα)\(f+fα)
 d₁ .= d[1:2:2*nₚ]
 d₂ .= d[2:2:2*nₚ]
 
@@ -98,5 +98,5 @@ prescribe!(elements["Ωᵉ"],:∂v∂y=>(x,y,z)->P/EI*(L-x)*y*ν)
 h1,l2 = ops[4](elements["Ωᵉ"])
 println(h1)
 println(l2)
-end
+# end
         

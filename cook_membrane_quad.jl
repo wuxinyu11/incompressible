@@ -1,7 +1,7 @@
 
 using  ApproxOperator, LinearAlgebra, Printf
 include("input.jl")
-elements, nodes = import_quad("./msh/cook_membrance_quad_10.msh")
+elements, nodes ,elms= import_quad("./msh/cook_membrance_quad_5.msh")
 
 κ = 400942
 μ = 80.1938
@@ -9,6 +9,9 @@ E = 9*κ*μ/(3*κ+μ)
 ν = (3*κ-2*μ)/2/(3*κ+μ)
 # E = 70.0
 #  ν = 0.3333
+Cᵢᵢᵢᵢ = E*(1-ν)/(1+ν)/(1-2*ν)
+Cᵢᵢⱼⱼ = E*ν/(1+ν)/(1-2*ν)
+Cᵢⱼᵢⱼ = E/(1+ν)/2
 
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
@@ -59,7 +62,7 @@ d₂ = zeros(nₚ)
 
 push!(nodes,:d₁=>d₁,:d₂=>d₂)
 
-nmax = 1
+nmax = 29
 P = 0:6.25/nmax:6.25
 tolerance=1.0e-10;maxiters=1000;
 for (n,p) in enumerate(P)
@@ -155,3 +158,62 @@ end
 u₁=d₁[3]
 u₂=d₂[3]
 println(u₂)
+
+# fo = open("./vtk/cook_membrance_rkgsi_mix_"*string(ndiv_𝑢)*".vtk","w")
+# fo = open("./vtk/cook_membrance_rkgsi_"*string(ndiv_𝑢)*".vtk","w")
+# fo = open("./vtk/cook_membrance_guass3_"*string(ndiv)*".vtk","w")
+fo = open("./vtk/cook_membrance_quad_5.vtk","w")
+@printf fo "# vtk DataFile Version 2.0\n"
+# @printf fo "cook_membrance_rkgsi_mix\n"
+@printf fo "cook_membrance_quad_10\n"
+@printf fo "ASCII\n"
+@printf fo "DATASET POLYDATA\n"
+@printf fo "POINTS %i float\n" nₚ
+for p in nodes
+    @printf fo "%f %f %f\n" p.x p.y p.z
+end
+@printf fo "POLYGONS %i %i\n" nₑ 5*nₑ
+for ap in elms["Ω"]
+    𝓒 = ap.vertices
+    @printf fo "%i %i %i %i %i\n" 4 (x.i-1 for x in 𝓒)...
+end
+@printf fo "POINT_DATA %i\n" nₚ
+@printf fo "VECTORS U float\n"
+for p in elements["Ω"]
+    ξ = collect(p.𝓖)[1]
+    N = ξ[:𝝭]
+    u₁ = 0.0
+    u₂ = 0.0
+    for (i,x) in enumerate(p.𝓒)
+        u₁ += N[i]*x.d₁
+        u₂ += N[i]*x.d₂
+    end
+    @printf fo "%f %f %f\n" u₁ u₂ 0.0
+end
+
+@printf fo "TENSORS STRESS float\n"
+for p in elements["Ω"]
+    𝓒 = p.𝓒
+    𝓖 = p.𝓖
+    ε₁₁ = 0.0
+    ε₂₂ = 0.0
+    ε₁₂ = 0.0
+
+    for (i,ξ) in enumerate(𝓖)
+        B₁ = ξ[:∂𝝭∂x]
+        B₂ = ξ[:∂𝝭∂y]
+        for (j,xⱼ) in enumerate(𝓒)
+            ε₁₁ += B₁[j]*xⱼ.d₁
+            ε₂₂ += B₂[j]*xⱼ.d₂
+            ε₁₂ += B₁[j]*xⱼ.d₂ + B₂[j]*xⱼ.d₁
+        end
+    end
+    σ₁₁ = Cᵢᵢᵢᵢ*ε₁₁+Cᵢᵢⱼⱼ*ε₂₂
+    σ₂₂ = Cᵢᵢⱼⱼ*ε₁₁+Cᵢᵢᵢᵢ*ε₂₂
+    σ₁₂ = Cᵢⱼᵢⱼ*ε₁₂
+    @printf fo "%f %f %f\n" σ₁₁ σ₁₂ 0.0
+    @printf fo "%f %f %f\n" σ₁₂ σ₂₂ 0.0
+    @printf fo "%f %f %f\n" 0.0 0.0 0.0
+end
+close(fo)
+

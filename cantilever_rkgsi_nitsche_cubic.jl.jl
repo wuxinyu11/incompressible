@@ -8,7 +8,7 @@
 # config = TOML.parsefile("./toml/cantilever_2D_rkgsi_nitsche_cubic.toml")
 # elements,nodes = importmsh(file_nodes,config)
 using  ApproxOperator, LinearAlgebra, Printf
-ndiv = 16
+ndiv = 32
 include("input.jl")
 elements, nodes = import_rkgsi("./msh/cantilever_"*string(ndiv)*".msh")
 nₚ = length(nodes)

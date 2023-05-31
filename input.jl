@@ -409,7 +409,7 @@ function import_quad(filename::String)
             push!(elements["Γᵗ"],element)
         end
     end
-    return elements,nodes
+    return elements,nodes,elms
 end
 
 function import_gauss_quadratic(filename::String,s::Symbol)

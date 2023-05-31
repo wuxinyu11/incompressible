@@ -29,8 +29,8 @@ using YAML,ApproxOperator,Plots, LinearAlgebra
 # xlims_ = (-0.5,48.5)
 # ylims_ = (-6.5,6.5)
 #  cook:
-#   linewidth: 4->2, 8->1.5, 16->1,  20->0.6  32->0.5
-#   markersize: 4->5, 8->4, 16->3, 20->2 32->1
+#   linewidth: 5->2, 10->1.5, 15->1.5,  20->0.6  25->0.5
+#   markersize: 55->5, 10->2.5, 15->2, 20->1 25->1
 xlims_ = (0,48.0)
 ylims_ = (0,60.0)
 
@@ -67,8 +67,8 @@ end
 
 
 include("input.jl")
-# elements, nodes = import_tri3("./msh/cook_membrance_20.msh")
-elements, nodes = import_tri3("./msh/cantilever_4.msh")
+elements, nodes = import_tri3("./msh/cook_membrance_3.msh")
+# elements, nodes = import_tri3("./msh/cantilever_4.msh")
 
 # elements, nodes = ApproxOperator.importmsh("./msh/beam_10.msh")
 # include("input.jl")
@@ -88,6 +88,6 @@ p = plotmesh(elements["Ω"])
 
 # elements, nodes = importmsh("./msh/plate_with_hole_24.msh")
 # p = plotmesh(elements["Ω"])
-# savefig(p,"./figure/cook_membrance_20.svg")
-savefig(p,"./figure/cantilever_4.svg")
+savefig(p,"./figure/cook_membrance_3.svg")
+# savefig(p,"./figure/cantilever_4.svg")
 plot(p)
