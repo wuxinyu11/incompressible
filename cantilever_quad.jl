@@ -1,6 +1,6 @@
 
 using  ApproxOperator, LinearAlgebra, Printf, XLSX
- ndiv = 8
+ ndiv = 16
 include("input.jl")
 elements, nodes = import_quad("./msh/cantilever_quad_"*string(ndiv)*".msh")
 nₚ = length(nodes)
