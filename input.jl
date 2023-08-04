@@ -218,7 +218,7 @@ function import_quad(filename::String)
         push!(nodes,node)
     end
 
-    elements = Dict(["Ω"=>Element{:Quad}[],"Ωᵛ"=>Element{:Quad}[],"Γᵍ"=>Element{:Seg2}[],"Γᵗ"=>Element{:Seg2}[]])
+    elements = Dict(["Ω"=>Element{:Quad}[],"Ωᵛ"=>Element{:Quad}[],"Ωᵉ"=>Element{:Quad}[],"Γᵍ"=>Element{:Seg2}[],"Γᵗ"=>Element{:Seg2}[]])
 
     𝓒 = Node{(:𝐼,),1}[]
     𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
@@ -314,6 +314,54 @@ function import_quad(filename::String)
         end
         g += ng
         push!(elements["Ωᵛ"],element)
+    end
+
+    𝓒 = Node{(:𝐼,),1}[]
+    𝓖 = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}[]
+    c = 0
+    g = 0
+    G = 0
+    s = 0
+    ng = 1
+    gauss_scheme = :QuadGI25
+    nₑ = length(elms["Ω"])
+
+    scheme = ApproxOperator.quadraturerule(gauss_scheme)
+    data_𝓖 = Dict([
+        :ξ=>(1,scheme[:ξ]),
+        :η=>(1,scheme[:η]),
+        :w=>(1,scheme[:w]),
+        :x=>(2,zeros(ng*nₑ)),
+        :y=>(2,zeros(ng*nₑ)),
+        :z=>(2,zeros(ng*nₑ)),
+        :𝑤=>(2,zeros(ng*nₑ)),
+        :𝝭=>(4,zeros(ng*nₑ*4)),
+        :∂𝝭∂x=>(4,zeros(ng*nₑ*4)),
+        :∂𝝭∂y=>(4,zeros(ng*nₑ*4)),
+    ])
+    for (C,a) in enumerate(elms["Ω"])
+        element = Element{:Quad}((c,4,𝓒),(g,ng,𝓖))
+        for v in a.vertices
+            i = v.i
+            push!(𝓒,nodes[i])
+        end
+        c += 4
+
+        for i in 1:ng
+            G += 1
+            x = Node{(:𝑔,:𝐺,:𝐶,:𝑠),4}((i,G,C,s),data_𝓖)
+            ξ = x.ξ
+            η = x.η
+            x_,y_,z_ = a(ξ,η)
+            x.x = x_
+            x.y = y_
+            x.z = z_
+            x.𝑤 = ApproxOperator.get𝐽(a,ξ,η)*x.w
+            push!(𝓖,x)
+            s += 4
+        end
+        g += ng
+        push!(elements["Ωᵉ"],element)
     end
 
     𝓒 = Node{(:𝐼,),1}[]
