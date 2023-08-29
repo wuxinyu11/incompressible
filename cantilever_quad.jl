@@ -61,6 +61,7 @@ opsᵈ = [
 ]
 # k = zeros(2*nₚ,2*nₚ)
 kᵛ = zeros(2*nₚ,2*nₚ)
+kᵛ_ = zeros(2*nₚ,2*nₚ)
 kᵈ = zeros(2*nₚ,2*nₚ)
 kᵍ = zeros(2*nₚ,2*nₚ)
 # kα = zeros(2*nₚ,2*nₚ)
@@ -89,16 +90,21 @@ push!(nodes,:d₁=>d₁,:d₂=>d₂)
         # ops[5](elements["Γᵍ"],k,f)
         # ops[1](elements["Ω"],k)
         opsᵛ[1](elements["Ωᵛ"],kᵛ)
+        opsᵛ[1](elements["Ω"],kᵛ_)
         opsᵈ[1](elements["Ωᵛ"],kᵈ)
         ops[2](elements["Γᵗ"],f)
         ops[3](elements["Γᵍ"],kᵍ,f)
         # ops[4](elements["Γᵍ"],k,f)
         # d .= (k+kα)\f
-        d = (kᵛ+kᵈ+kᵍ)\f
+        # d = (kᵛ+kᵈ+kᵍ)\f
         d₁ .= d[1:2:2*nₚ]
         d₂ .= d[2:2:2*nₚ]
         push!(nodes,:d₁=>d₁,:d₂=>d₂)
-        f = eigen(kᵈ,kᵛ)
+        f = eigen(kᵈ+kᵍ,kᵛ)
+        # v = eigvals(kᵈ+kᵍ,kᵛ)
+        v = eigvals(kᵛ,kᵈ)
+        # v = eigvals(kᵈ,kᵛ)
+        # v_ = eigvals(kᵛ_,kᵈ)
         # set𝝭!(elements["Ω̄"])
         # # set∇𝝭!(elements["Ω̄"])
         #  set𝝭!(elements["Ω"])
