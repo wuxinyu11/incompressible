@@ -1,8 +1,8 @@
 
 using  ApproxOperator, LinearAlgebra, Printf, XLSX
- ndiv = 16
+ ndiv = 8
 include("input.jl")
-elements, nodes = import_quad("./msh/cantilever_quad_"*string(ndiv)*".msh")
+elements, nodes = import_quad("./msh/cantilever_quad_square_"*string(ndiv)*".msh")
 nₚ = length(nodes)
 nₑ = length(elements["Ω"])
 
@@ -21,7 +21,7 @@ P = 1000
 # ν̄ = 0.3
 E = Ē/(1.0-ν̄^2)
 ν = ν̄/(1.0-ν̄)
-L = 48
+L = 12
 D = 12
 I = D^3/12
 EI = E*I
@@ -98,7 +98,7 @@ push!(nodes,:d₁=>d₁,:d₂=>d₂)
         d₁ .= d[1:2:2*nₚ]
         d₂ .= d[2:2:2*nₚ]
         push!(nodes,:d₁=>d₁,:d₂=>d₂)
-        f = eigen(kᵛ, kᵈ)
+        f = eigen(kᵈ,kᵛ)
         # set𝝭!(elements["Ω̄"])
         # # set∇𝝭!(elements["Ω̄"])
         #  set𝝭!(elements["Ω"])
